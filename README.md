@@ -7,3 +7,6 @@ my github pages repo
 * uap project
 * personal website
 * IdeaFlow
+* food app
+* search algorithm demo
+* reliable socket
