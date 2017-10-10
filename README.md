@@ -6,3 +6,4 @@ my github pages repo
 * graph note taking app
 * uap project
 * personal website
+* IdeaFlow
