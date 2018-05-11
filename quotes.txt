@@ -8,9 +8,6 @@ If you want something to happen, you have to go out and do it. Nothing else work
 "And most important, have the courage to follow your heart and intuition. They somehow already know what you truly want to become."
 Steve Jobs
 
-"Nothing in this world can take the place of persistence. Talent will not: nothing is more common than unsuccessful men with talent. Genius will not; unrewarded genius is almost a proverb. Education will not: the world is full of educated derelicts. Persistence and determination alone are omnipotent."
-  Calvin Coolidge
-
 "Invention requires a long-term willingness to be misunderstood. You do something that you genuinely believe in, that you have conviction about, but for a long period of time, well-meaning people may criticize that effort … if you really have conviction that they’re not right, you need to have that long-term willingness to be misunderstood. It’s a key part of invention."
   Jeff Bezos
 
@@ -35,11 +32,6 @@ Steve Jobs
 "The mind of man is capable of anything"
   Christopher Marlowe -- Joseph Conrad
 
-"We are what we repeatedly do. Excellence then, is not an act, but a habit."
-  Aristotle
-
-"a guy a dog, or he ain't"
-
 "Immature poets imitate; mature poets steal" 
   T.S. Eliot
 
@@ -58,14 +50,11 @@ Steve Jobs
 "And people are like Chris you should boycott, Chris you should quit. You should quit. You know, how come it's only unemployed people who tell you to quit something, huh?"
   Chris Rock
 
-"Don't just do something. Stand there"
+"Don't just do something. Just sit there"
   Marvin Minsky
 
 "Give me six hours to chop down a tree and I will spend the first four sharpening the axe"
   Abraham Lincoln
-
-“If a thing is worth doing, it is worth doing badly.”
-  Gilbert Chesterton
 
 "The challenge was not only to win one, but it was to win multiple ones. To be able to sit at the same lunch table with my muses. Michael, Magic. I want to be able to sit down at the same table with them and belong there. And um, I'm very proud to be able to say I can do that."
   Kobe Bryant
@@ -76,19 +65,11 @@ Steve Jobs
 "This is not the end. It is not even the beginning of the end. It is, perhaps, the end of the beginning."
   Winston Churchill
 
-"I should have been less worried about doing something that seemed cool, and just done something I liked. That's the actual road to coolness anyway."
-  Paul Graham
-
 "No matter what, a man can change his stars, and I won't spend the rest of my life as nothing"
   A Knight's Tale
 
-"Never give up on something that you can’t go a day without thinking about."
-  Winston Churchill
-
 "No artist tolerates reality"
   Nietzsche
-
-"Fuck it, ship it"
 
 "There is no such thing as a ‘self-made’ man. We are made up of thousands of others. Everyone who has ever done a kind deed for us, or spoken one word of encouragement to us, has entered into the make-up of our character and of our thoughts, as well as our success."
   George Matthew Adams
@@ -102,10 +83,8 @@ Steve Jobs
 "Winnin' ain't for everybody"
   Kobe Bryant
 
-"What happens to a dream deferred?"
+"What happens to a dream deferred? Does it dry up like a raisin in the sun?"
   Langston Hughes
-
-"You are what you eat"
 
 "A chain is only as strong as its weakest link."
 
@@ -145,7 +124,7 @@ Lin-Manuel Miranda
 "Be profoundly accurate"
   Tom Alden
 
-"You don’t write because you have something to say. You write to find out what you have to say."
+"You don’t write because you have something to say. You write to find out what you have to say."
   Sean McCabe
 
 "Fun comes from the attention and care you bring to something, that offers enough freedom of movement, enough play, that such attention matters."
