@@ -1,0 +1,1 @@
+var $=jQuery;$(document).ready(function(){$("#myName").css("text-indent","1px").fitText().fadeIn("slow"),function(){$(".transitionText").fitText()}();!function(e){$(".bwWrapper").BlackAndWhite({hoverEffect:!0,webworkerPath:!1,responsive:!0,invertHoverEffect:!1,speed:{fadeIn:2e3,fadeOut:2e3},onImageReady:function(e){}})}()});
