@@ -1,0 +1,62 @@
+@import url("../../../../css/style.css");
+
+.profilePic {
+	margin: 10px;
+	float: left;
+	width: 500px;
+}
+
+.profilePic img {
+	border-radius: 5px;
+	width: 100%;
+	max-height: 600px;
+}
+
+.profilePic figcaption {
+	text-align: center;
+}
+
+.brotherInfo {
+	width: 70%;
+	border-radius: 5px;
+	background-color: rgba(0,0,0,.9);	
+	margin: 0 auto;
+}
+
+.dataHead {
+	font-variant: small-caps;
+	font-size: 1.2em;
+	color: #666666;
+}
+
+.dataInfo {
+	text-indent: 15px;
+}
+
+.dataElement {
+	margin: 8px;	
+}
+
+#firstData {
+	padding-top: 5px;	
+}
+
+body.brotherPageBody {
+	margin: 0 auto;
+	height: 100%;
+	background-color: rgba(0,0,0,.75);
+}
+
+body#b2012 {
+	background-image:url(../images/2012picbgblack.png);
+}
+body#b2013 {
+	background-image:url(../images/2013picbgblack.png);
+}
+body#b2014 {
+	background-image:url(../images/2014picbgblack.png);
+}
+
+li {
+	list-style-type: none;	
+}

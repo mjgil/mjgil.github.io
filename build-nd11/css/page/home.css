@@ -1,0 +1,79 @@
+@import url("../style.css");
+
+p#cpwMessage {
+	margin: 10px 50px;
+	text-align: center;
+	text-shadow:3px 3px 3px #444;
+	font-style: italic;
+}
+
+ul#cpw {
+	list-style-type: circle;
+}
+
+ul#cpw li {
+	margin-top:2px;
+}
+
+header#cpwHead {
+	font-size:16px;
+}
+
+section#twitterPane {
+	width: 	100%;
+	height: 400px;
+	background-color: rgba(0,0,0,.6);
+	border-radius: 10px;
+	border: 1px black solid;
+	overflow: hidden;
+}
+
+section#twitterPane article {
+	border-bottom: 1px dotted;
+	padding: 5px;
+}
+
+header.rightPanelTitle {
+	text-align: center;
+	font-size: 1.4em;
+	font-variant: small-caps;	
+	font-weight: bold;
+}
+
+section.rightPanelSection {
+		margin: 1em 0;
+		border-bottom: 1px dashed;
+		padding: 0 0 1em 0;
+		width: 	100%;
+}
+
+section.rightPanelSection:last-child {
+		border-bottom: 0;
+}
+
+img.rightPanelImage {
+	width: 100%;
+}
+
+img#bannerImage {
+	width: 100%;
+	height: 100%;	
+}
+
+
+/*
+
+
+	background: -webkit-gradient(
+  					radial, 50% 100%, 0, 50% 100%, 600, from(rgba(222,222,222,.3)), to(rgba(11,11,11,.3))
+				), 
+				-webkit-gradient(
+  					radial, 0% 0%, 0, 0% 0%, 800, from(rgba(224,20,20,.3)), to(rgba(11,11,11,.3))
+				), 
+				-webkit-gradient(
+  					radial, 100% 0%, 0, 100% 0%, 800, from(rgba(224,20,20,.5)), to(rgba(11,11,11,.3))
+				);
+	background-image: -moz-radial-gradient(50% 100%, circle farthest-side, rgba(222,222,222,.3) 0%,rgba(11,11,11,.3) 600px),
+						-moz-radial-gradient(0% 0%, circle farthest-side, rgba(224,20,20,.3) 0%,rgba(11,11,11,.3) 800px),
+						-moz-radial-gradient(100% 0%, circle farthest-side, rgba(224,20,20,.5) 0%,rgba(11,11,11,.3) 800px);
+						*/

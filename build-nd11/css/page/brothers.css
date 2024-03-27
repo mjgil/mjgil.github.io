@@ -1,0 +1,67 @@
+@import url("../style.css");
+
+
+figure.classPics {
+  height:auto;
+  width:auto;
+  float:left;
+  text-align:center;
+  margin: 0 5px 5px 5px;
+}
+
+figure {
+	position: relative;
+}
+
+figcaption {
+	margin-top: 2px;
+}
+
+a.noUnderline {
+	text-decoration: none;
+}
+
+figcaption:hover {
+	background: none;
+	color: #FFFFFF;
+	-webkit-stroke-width: 5.0px;
+	-webkit-stroke-color: #FFFFFF;
+	-webkit-fill-color: #FFFFFF;
+	-moz-stroke-width: 5.0px;
+	-moz-stroke-color: #FFFFFF;
+	-moz-fill-color: #FFFFFF;
+	text-shadow: 0px 0px 10px #FFFFFF, 0px -1px 10px #FFFFFF, 0px 1px 1px #FFFFFF;
+	-webkit-transition-duration: .5s, .5s;
+	-moz-transition-duration: .5s, .5s;
+	transition-timing-function: linear;
+}
+
+a img {
+	border-radius: 5px;
+}
+
+section.individualPics {
+	margin-top: 20px;	
+}
+
+header.classHeader {
+	text-align: center;
+	font-size: 36px;
+	font-variant: small-caps;
+	font-weight: bold;
+	border-bottom: 1px solid;	
+}
+
+.slideImage {
+	width: 500px;
+	height: 450px;
+	margin: auto 0;	
+	border-radius: 5px;
+}
+
+.slideImage img {
+	max-width: 100%;	
+	width: 100%;
+	height: 100%;
+	border-radius: 5px;
+}

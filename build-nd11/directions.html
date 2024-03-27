@@ -1,0 +1,80 @@
+<!doctype html>
+<!--[if lt IE 7 ]> <html lang="en" class="no-js ie6"> <![endif]-->
+<!--[if IE 7 ]>    <html lang="en" class="no-js ie7"> <![endif]-->
+<!--[if IE 8 ]>    <html lang="en" class="no-js ie8"> <![endif]-->
+<!--[if IE 9 ]>    <html lang="en" class="no-js ie9"> <![endif]-->
+<!--[if (gt IE 9)|!(IE)]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	
+	<title>Our House - Nu Delta Fraternity</title>
+	<meta name="description" content="Nu Delta Fraternity Website">
+	<meta name="author" content="Malcom Gilbert">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+	<link rel="shortcut icon" href="/favicon.ico">
+	<link rel="stylesheet" href="css/stylev5.css">
+    <link href="https://fonts.googleapis.com/css?family=Lora:regular,italic,bold,bolditalic&v1" rel="stylesheet" type="text/css">
+    <script src="https://maps.googleapis.com/maps/api/js?sensor=true"></script>
+	<script src="https://www.google.com/jsapi"></script>
+
+	<!--<script src="js/libs/modernizr-1.7.min.js"></script>-->
+</head>
+<body class="directions">
+
+    <!-- div wrappers to make to footer stick to the bottom of the page -->
+    <div id="footerWrapper1">
+    <div id="footerWrapper2">
+	<header>
+    	<!-- puts the navigation bar in a javascript file for flexibility -->
+    	<nav id="navigationBar"><ul id="topNavBar"><li class="topNavList"><a href="index.html" class="home">Home</a></li><li class="topNavList"><a href="brothers.html" class="brothers">Brothers</a></li><li class="topNavList"><a href="rush.html" class="rush">Rush</a></li><li class="topNavList"><a href="summerHousing.html" class="summerHousing">Summer Housing</a></li><li class="topNavList"><a href="gallery/gallery.html" class="gallery">Gallery</a></li><li class="topNavList"><a href="directions.html" class="directions">Directions</a></li><li class="topNavList"><a href="alumni.html" class="alumni">Alumni</a></li><li class="topNavList"><a href="aboutUs.html" class="aboutUs">About Us</a></li><li class="topNavList"><a href="contactUs.html" class="contactUs">Contact Us</a></li></ul></nav>
+        <section id="banner">
+        		<img id="bannerImage" src="images/banner3.png" alt="Nu Delta Fraternity" title="Nu Delta Fraternity"/>
+        </section>
+    </header>
+    <div id="contentDirections">
+    <section id="directions">
+        <form method="post" action="#">
+            <div class="directionLabel">
+                <label for="address" class="directionLabel">Address: <span class="required">*</span></label>
+                <input type="text" id="address" name="address" placeholder="Your Address" required autofocus />
+                <div id="invalidAddress"></div>
+            </div>
+            <div class="directionLabel">
+                <label for="directionType">Mode of Transportation:</label>
+                <select id="directionType" name="directionType">
+                    <option value="Walking">Walking</option>
+                    <option value="Driving">Driving</option>
+                    <option value="Bicycling">Bicycling</option>
+                </select>
+            
+            <span id="loading"></span>
+            <input type="submit" value="Get Directions" id="getDirections" />
+       </form>
+       </div>
+    </section>
+    <section id="directionMap"></section>
+    <div class="shadowLeft"></div>
+    <div class="shadowTop"></div>
+	</div>
+<!-- close footer wrappers -->
+</div>
+</div>
+<!-- puts the navigation bar in a javascript file for flexibility -->
+<script src="js/footer.js"></script>
+	
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+	<script>!window.jQuery && document.write(unescape('%3Cscript src="js/libs/jquery-1.6.2.min.js"%3E%3C/script%3E'))</script>
+	<!--[if lt IE 7 ]>
+	<script src="js/libs/dd_belatedpng.js"></script>
+	<script> DD_belatedPNG.fix('img, .png_bg');</script>
+	<![endif]-->
+	<script src="https://platform.twitter.com/widgets.js" type="text/javascript"></script>
+    <script src="js/googleAnalytics.js"></script>
+    <script src="js/mainScript.js"></script>
+    <script src="js/libs/respond.min.js"></script>
+	<script src="js/googleMapsDirections.js"></script>
+</body>
+</html>

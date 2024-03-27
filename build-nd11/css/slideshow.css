@@ -1,0 +1,142 @@
+.slideshow {
+    width: 500px;
+    height: 500px;
+    overflow: hidden;
+    position: relative;
+    margin: 20px;
+	float: left;
+}
+
+.slideshow-reel {
+    width: 3000px;
+    height: 450px;
+    position: absolute;
+    top: 0;
+    left: 0;\
+}
+
+.slideshow-reel .slide {
+    width: 500px;
+    height: 450px;
+    float: left;
+    background-color: rgba(0,0,0,.3);
+	border-radius: 10px;
+}
+
+.slideshow-reel .slide:nth-child(2n+1) {
+    background-color: rgba(11,11,11,.3);
+}
+
+.slideshow-reel h1 {
+    margin: 25px 60px;
+    color: #FFF;
+    font-size: 3em;
+    text-shadow: 0 -1px 1px #333;
+}
+
+/* arrow navigation */
+
+.slideshow-arrow {
+    display: block;
+    position: absolute;
+    top: 190px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-color: transparent;
+    outline: none;
+}
+
+a.slideshow-arrow img {
+	opacity: 0.5;	
+}
+
+a.slideshow-arrow img:hover {
+	opacity: 1;	
+}
+
+.slideshow-left {
+    left: 0;
+    border-right-color: rgba(0,0,0,.125);
+}
+
+.slideshow-right {
+    right:60px;
+    border-left-color: rgba(0,0,0,.125);;
+}
+
+.slideshow-left:hover {
+    border-right-color: rgba(0,0,0,.25);
+}
+
+.slideshow-right:hover {
+    border-left-color: rgba(0,0,0,.25);;
+}
+
+/* bottom navigation */
+
+.slideshow-nav {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 500px;
+}
+
+.slideshow-nav .nav-item {
+    float: left;
+    width: 75px;
+    padding: 11px 0;
+    outline: none;
+}
+
+.slideshow-nav .nav-item-line {
+    float: left;
+    width: 61px;
+    height: 1px;
+    line-height: 1px;
+    margin: 3px 0;
+    background-color: #bbb;
+}
+
+.slideshow-nav .nav-item-line-hidden {
+    background-color: transparent;
+}
+
+.slideshow-nav .nav-item-dot {
+    float: left;
+    width: 8px;
+    height: 8px;
+    margin: 0 3px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    background-color: #ed1d27;
+}
+
+/* active nav dot */
+
+.active-nav-item {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30px;
+    height: 30px;
+    margin-left: 53px;
+    background-color: #8e8d8b;
+    background-color: rgba(28, 27, 23, .5);
+    -webkit-border-radius: 15px;
+    -moz-border-radius: 15px;
+    border-radius: 15px;
+}
+
+.active-nav-item .active-nav-item-inner {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin: 11px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    background-color: #000;
+}

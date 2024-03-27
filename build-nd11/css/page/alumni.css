@@ -1,0 +1,58 @@
+@import url("../style.css");
+
+header.recentAlumni {
+	text-align: center;
+	font-size: 36px;	
+	margin-top: 10px;
+	color: rgba(224, 115, 115, .8);
+}
+
+section.recentAlumni {
+	text-align: center;
+}
+
+figcaption:hover {
+	background: none;
+	color: #FFFFFF;
+	-webkit-stroke-width: 5.0px;
+	-webkit-stroke-color: #FFFFFF;
+	-webkit-fill-color: #FFFFFF;
+	-moz-stroke-width: 5.0px;
+	-moz-stroke-color: #FFFFFF;
+	-moz-fill-color: #FFFFFF;
+	text-shadow: 0px 0px 10px #FFFFFF, 0px -1px 10px #FFFFFF, 0px 1px 1px #FFFFFF;
+	-webkit-transition-duration: .5s, .5s;
+	-moz-transition-duration: .5s, .5s;
+	transition-timing-function: linear;
+}
+
+img {
+	border-radius: 5px;
+}
+
+section.a2010,
+section.a2009 {
+	display: none;	
+}
+
+a.activeAlumni {
+	color: #E00000;
+	font-size: 110%;
+}
+
+a#link2011:hover,
+a#link2010:hover,
+a#link2009:hover {
+	background: none;
+	color: #FFFFFF;
+	-webkit-stroke-width: 5.0px;
+	-webkit-stroke-color: #FFFFFF;
+	-webkit-fill-color: #FFFFFF;
+	-moz-stroke-width: 5.0px;
+	-moz-stroke-color: #FFFFFF;
+	-moz-fill-color: #FFFFFF;
+	text-shadow: 0px 0px 10px #FFFFFF, 0px -1px 10px #FFFFFF, 0px 1px 1px #FFFFFF;
+	-webkit-transition-duration: .5s, .5s;
+	-moz-transition-duration: .5s, .5s;
+	transition-timing-function: linear;
+}

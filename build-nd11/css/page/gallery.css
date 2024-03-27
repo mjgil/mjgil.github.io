@@ -1,0 +1,11 @@
+@import url("../style.css");
+
+figure {
+	text-align: center
+}
+
+img#galleryShot {
+	text-align: center;
+	margin: 0 auto;
+	display: block;
+}
