@@ -1,0 +1,128 @@
+Change .htaccess to not reload everything on every page (Expires default)
+Better 404 page
+
+************Total Site****************
+left side bar - phoenix / crest / animated phoenix with html5/javascript canvas?
+logo - photoshop / illustrator / inline svg / canvas / studio 4d?
+rightside bar
+	twitter feed on the right
+	tag cloud of brothers / pages?
+	Event Calendar
+	Location map
+media queries to resize browser
+get tons of images of the house and photoshop the $#%! out of them
+Create article formatting
+port to php
+establish database of info
+link to sql.mit.edu
+add web files
+create ND accounts: YouTube, Github ( or more private hosting site ), Google+, Facebook, Twitter, Dropbox
+put social network icons on the page ( footer )
+create docs on the wiki
+licensing?
+Directions Page / House info --- Directions and tour
+
+
+************Front Page****************
+cpw events
+zach's quote
+slideshow?
+maps api of where people are this summer ( ND tooltip )
+rush posting
+
+
+************Brothers Page****************
+
+google maps (where is nu delta)/ google calendar (rush schedule) pictures of rush
+
+canvas collage of brothers instead of class pic?
+resize brother popup page based on screensize
+make sure layout works with media queries
+hilightable brothers' names
+better (non-swished images)
+class backgrounds?
+brother information / brother pages
+maybe brother images around the canvas? slideshow per class? --- try image slideshow and image light box in canvas pics of the class, drag and droppable pics
+use reflections for brother images?
+
+
+************Rush Page****************
+Actually interface with google maps and calendar api for more customizable image
+If they click on a link in the calendar it will show more information about the event
+it will bring them to a google maps link with directions - might work against us?
+add rush information
+
+
+************Summer Housing Page****************
+
+House Tour will be here. Describe the house. kitchen, internet, free laundry, toilets, printer/scanner, workstations, foosball table, pool table, tv, move-in/move-out dates, prices, deposit, contact info, course of action (how to contact, fill out paperwork, request a tour, etc) 4th of July location/ festivities. Awesome Brothers.
+
+upload youtube video of roofdeck
+pictures
+how to contact
+add text
+house tour - google street view - need images
+4th of july images
+
+
+************Officers Page****************
+Get text and articles
+High Level Description of the officers. Current officer position holder. anything else?
+
+
+
+************For Parents Page****************
+Get text and articles
+Page to describe Nu Delta to parents. Emphasize no hazing policy. Link to "About Us" page. blah...
+
+
+************Gallery Page****************
+Make just image link to the gallery
+add boarder radius / dropshadow
+add videos
+video gallery in header with slideshow options
+
+
+************Alumni Page****************
+begin with strength of brother hood. alumni accomplishments. current alumni in the area. see past alumni list or thumbnails
+
+Add alumni with thumbnails
+find cool way to do this - tag cloud here?
+Get alumni accomplishments
+
+
+************About Us Page****************
+Get info and pics
+Academics: strong, pledge training emphasizes this, major breakdown?(might work against us?) bibles, upperclass brothers
+Athletics: im sports, sorority/greek events
+Community Service: relay for life, backbay ally rally, misc individual stuff, pic of Susan Hock Trophy
+Social Events: mixers, parties, pubnights, etc..
+Brotherhood Events: Julians, class dinners, etc..
+
+
+
+************Contact Us Page****************
+Change button text and image
+change intro text
+Add summer housing option to form
+
+
+************Javascript****************
+Application cache with cache manifest
+web workers for highly computational activities
+drag and drop for class pic
+geolocation
+canvas for various ( logo, classpic, crest/animation ) IE fix.js
+history api
+chrome frame
+
+
+************CSS****************
+reflections
+new selectors - ( nth-child, :not )
+google web fonts
+multiple columns
+different types of gradients ( radial ) // lighting effect? with white to transparent?
+blurring drop shadow of text ( 9px + )
+background-size ( auto, contain, hover, 100% )
+border-image

@@ -1,0 +1,68 @@
+@import url("../style.css");
+
+.officerPics {
+	float: left;
+	position: relative;
+	width: 180px;
+	height: 180px;
+	background-color: rgba( 22, 22, 22, .6);
+	padding: 5px;
+	margin: 2px;
+	-webkit-transition-duration: .5s, .5s;
+	-moz-transition-duration: .5s, .5s;
+	transition-timing-function: linear;
+}
+
+.officerPics:hover {
+	background-color: rgba( 88, 88, 88, .6);
+	-webkit-transition-duration: .5s, .5s;
+	-moz-transition-duration: .5s, .5s;
+	transition-timing-function: linear;
+}
+
+section#officerBody {
+	margin: 10px;
+}
+
+figcaption.officersPage {
+	position: absolute;
+	top: 125px;
+	left: 0;
+	width: 180px;
+	height: 55px;	
+	margin: 5px;
+	background: rgba( 0, 0, 0, .85);
+	overflow: hidden;
+}
+
+header.officerTitle {
+	font-variant: small-caps;
+	text-align: center;
+	font-weight: bold;
+	font-size:1.1em;
+	margin: 3px 0;
+}
+
+.broName {
+	font-variant: small-caps;
+	text-align: center;
+	font-weight: bold;
+	color: rgba(224, 115, 115, .8);
+}
+
+figcaption.officersPage p {
+	font-style: italic;	
+}
+
+.officerHead {
+	text-align: center;
+	font-size: 36px;
+	margin-bottom: 10px;
+	font-variant: small-caps;
+	border-bottom: 1px dotted;
+}
+
+.officerSection {
+	width: 585px;
+	margin: 0 auto;
+}

@@ -1,0 +1,70 @@
+@import url("../style.css");
+
+body.aboutUs section.middleArea{
+	background-color: rgba(0,0,0,.5);
+}
+
+.aboutUsPic {
+		width: 80%;
+		max-width: 100%;
+		margin: 5px auto 15px;
+		border-radius: 5px;
+}
+
+
+.picText {
+	margin: 10px;	
+	position: relative;
+	background-color: rgba(0,0,0,.2);
+	border-radius: 5px;
+}
+
+.picHeader {
+	text-align: center;	
+	width: 100%;
+	max-width: 100%;
+	font-size: 1.6em;
+	font-variant: small-caps;
+	font-weight: bold;
+	color: rgba(224, 115, 115, .8);
+	margin: 0 auto;
+}
+
+.imageAndHeader{
+	float: right;	
+	width: 50%;
+	margin: 2em 0;
+}
+
+.imageAndHeader:nth-child(2){
+	float: left;	
+}
+
+.textArticle {
+	margin-top: 3em;
+	padding-top: 5em;
+	padding-right: 3em;
+	text-align: center;
+	padding-bottom: 2em;
+	font-size: 1.1em;
+	line-height: 1.4em;
+}
+
+.textArticle:nth-child(2) {
+	padding-left: 3em;
+	color: #aaa;
+}
+
+#presidentQuote {
+	text-align: left;	
+	width: 50%;
+	color: #888;
+}
+
+#aboutUsMain {
+	font-size: 3em;	
+	text-align: center;
+	margin-top: 1em;
+	font-weight: bold;
+	font-variant: small-caps;
+}
