@@ -1,0 +1,13 @@
+{
+  "name": "diff-viewer",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "diff_viewer_bg.wasm",
+    "diff_viewer.js"
+  ],
+  "main": "diff_viewer.js",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

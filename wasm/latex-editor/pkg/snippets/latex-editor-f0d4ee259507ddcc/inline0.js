@@ -1,0 +1,1 @@
+export function render_katex(r,t){try{return katex.renderToString(r,{displayMode:t,throwOnError:!1,trust:!0})}catch(t){return'<span class="math-error">'+r.replace(/</g,"&lt;")+"</span>"}}

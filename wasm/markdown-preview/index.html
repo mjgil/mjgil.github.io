@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown Preview - Rust WASM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --accent: #2dd4bf;
+            --accent-dark: #14b8a6;
+            --editor-bg: #1e1e2e;
+            --editor-text: #cdd6f4;
+            --preview-bg: #ffffff;
+            --preview-text: #1e293b;
+            --header-bg: #0f172a;
+            --divider: #334155;
+            --code-bg: #f1f5f9;
+            --code-block-bg: #1e293b;
+            --code-block-text: #e2e8f0;
+            --blockquote-border: #2dd4bf;
+            --blockquote-bg: #f0fdfa;
+            --link-color: #0d9488;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, sans-serif;
+            overflow: hidden;
+        }
+
+        header {
+            background: var(--header-bg);
+            color: #f8fafc;
+            padding: 0 24px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        header h1 span {
+            color: var(--accent);
+        }
+
+        header .badge {
+            font-size: 11px;
+            background: var(--accent-dark);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 52px);
+        }
+
+        .pane-header {
+            height: 36px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Editor pane */
+        .editor-pane {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            background: var(--editor-bg);
+        }
+
+        .editor-pane .pane-header {
+            background: #181825;
+            color: #7f849c;
+            border-bottom: 1px solid #313244;
+        }
+
+        #editor {
+            flex: 1;
+            width: 100%;
+            background: var(--editor-bg);
+            color: var(--editor-text);
+            border: none;
+            outline: none;
+            resize: none;
+            padding: 16px 20px;
+            font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", "Consolas", monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            tab-size: 4;
+        }
+
+        #editor::selection {
+            background: rgba(45, 212, 191, 0.3);
+        }
+
+        /* Divider */
+        .divider {
+            width: 4px;
+            background: var(--divider);
+            cursor: col-resize;
+            transition: background 0.15s;
+            flex-shrink: 0;
+        }
+
+        .divider:hover, .divider.active {
+            background: var(--accent);
+        }
+
+        /* Preview pane */
+        .preview-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--preview-bg);
+            min-width: 0;
+        }
+
+        .preview-pane .pane-header {
+            background: #f8fafc;
+            color: #64748b;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        #preview {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 32px;
+            color: var(--preview-text);
+            line-height: 1.7;
+        }
+
+        /* Preview typography */
+        #preview h1 {
+            font-size: 2em;
+            font-weight: 700;
+            margin: 0.6em 0 0.4em;
+            padding-bottom: 0.3em;
+            border-bottom: 2px solid #e2e8f0;
+            color: #0f172a;
+        }
+
+        #preview h1:first-child {
+            margin-top: 0;
+        }
+
+        #preview h2 {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin: 1em 0 0.4em;
+            padding-bottom: 0.2em;
+            border-bottom: 1px solid #e2e8f0;
+            color: #0f172a;
+        }
+
+        #preview h3 {
+            font-size: 1.25em;
+            font-weight: 600;
+            margin: 0.8em 0 0.3em;
+            color: #1e293b;
+        }
+
+        #preview p {
+            margin: 0.6em 0;
+        }
+
+        #preview a {
+            color: var(--link-color);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.15s;
+        }
+
+        #preview a:hover {
+            border-bottom-color: var(--link-color);
+        }
+
+        #preview img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 0.5em 0;
+        }
+
+        #preview strong {
+            font-weight: 600;
+        }
+
+        #preview code {
+            background: var(--code-bg);
+            padding: 0.15em 0.4em;
+            border-radius: 4px;
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            font-size: 0.88em;
+            color: #0d9488;
+        }
+
+        #preview pre {
+            background: var(--code-block-bg);
+            color: var(--code-block-text);
+            padding: 16px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 0.8em 0;
+            border: 1px solid #334155;
+        }
+
+        #preview pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* Syntax highlighting tokens */
+        #preview pre .tok-kw { color: #c678dd; font-weight: 600; }
+        #preview pre .tok-str { color: #98c379; }
+        #preview pre .tok-num { color: #d19a66; }
+        #preview pre .tok-cm { color: #5c6370; font-style: italic; }
+        #preview pre .tok-fn { color: #61afef; }
+        #preview pre .tok-type { color: #e5c07b; }
+        #preview pre .tok-op { color: #56b6c2; }
+        #preview pre .tok-macro { color: #e06c75; }
+        #preview pre .tok-attr { color: #d19a66; }
+        #preview pre .tok-self { color: #e06c75; font-style: italic; }
+        #preview pre .tok-bool { color: #d19a66; font-weight: 600; }
+
+        #preview blockquote {
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--blockquote-bg);
+            padding: 12px 16px;
+            margin: 0.8em 0;
+            border-radius: 0 6px 6px 0;
+        }
+
+        #preview blockquote p {
+            margin: 0.3em 0;
+        }
+
+        #preview ul, #preview ol {
+            padding-left: 1.8em;
+            margin: 0.5em 0;
+        }
+
+        #preview li {
+            margin: 0.25em 0;
+        }
+
+        #preview hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(to right, var(--accent), transparent);
+            margin: 1.5em 0;
+        }
+
+        /* Scrollbar styling */
+        #editor::-webkit-scrollbar,
+        #preview::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #editor::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #editor::-webkit-scrollbar-thumb {
+            background: #45475a;
+            border-radius: 4px;
+        }
+
+        #preview::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #preview::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><span>&lt;/&gt;</span> Markdown Preview</h1>
+        <span class="badge">Rust + WASM</span>
+    </header>
+    <div class="container">
+        <div class="editor-pane" id="editor-pane">
+            <div class="pane-header">Editor</div>
+            <textarea id="editor" spellcheck="false" placeholder="Type your markdown here..."></textarea>
+        </div>
+        <div class="divider" id="divider"></div>
+        <div class="preview-pane" id="preview-pane">
+            <div class="pane-header">Preview</div>
+            <div id="preview"></div>
+        </div>
+    </div>
+
+    <script>
+        // Draggable divider
+        const divider = document.getElementById('divider');
+        const editorPane = document.getElementById('editor-pane');
+        const container = document.querySelector('.container');
+        let isDragging = false;
+
+        divider.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            divider.classList.add('active');
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const rect = container.getBoundingClientRect();
+            const offset = e.clientX - rect.left;
+            const pct = (offset / rect.width) * 100;
+            const clamped = Math.min(Math.max(pct, 20), 80);
+            editorPane.style.width = clamped + '%';
+            editorPane.style.flex = 'none';
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                divider.classList.remove('active');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
+    </script>
+
+    <script>
+        const LANG_RULES = {
+            rust: {
+                keywords: /\b(as|async|await|break|const|continue|crate|dyn|else|enum|extern|fn|for|if|impl|in|let|loop|match|mod|move|mut|pub|ref|return|self|Self|static|struct|super|trait|type|union|unsafe|use|where|while|yield|macro_rules)\b/g,
+                types: /\b(bool|char|f32|f64|i8|i16|i32|i64|i128|isize|str|u8|u16|u32|u64|u128|usize|String|Vec|Option|Result|Box|Rc|Arc|HashMap|HashSet|Some|None|Ok|Err)\b/g,
+                strings: /(r#?"(?:[^"\\]|\\.)*"#?|'[^'\\](?:\\.[^']*)?')/g,
+                comments: /(\/\/.*$|\/\*[\s\S]*?\*\/)/gm,
+                numbers: /\b(\d[\d_]*\.?\d*(?:e[+-]?\d+)?(?:f32|f64|i32|u32|usize|i64|u64)?)\b/g,
+                macros: /\b([a-z_]\w*!)/g,
+                functions: /\b([a-z_]\w*)\s*(?=\()/g,
+                booleans: /\b(true|false)\b/g,
+            },
+            python: {
+                keywords: /\b(and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\b/g,
+                types: /\b(int|float|str|bool|list|dict|tuple|set|None|True|False|bytes|object|type|range|print|len|map|filter|zip|enumerate|sorted|reversed|any|all|sum|min|max|abs|round|isinstance|issubclass|super|property|staticmethod|classmethod)\b/g,
+                strings: /("""[\s\S]*?"""|'''[\s\S]*?'''|f?"(?:[^"\\]|\\.)*"|f?'(?:[^'\\]|\\.)*')/gm,
+                comments: /(#.*$)/gm,
+                numbers: /\b(\d[\d_]*\.?\d*(?:e[+-]?\d+)?(?:j)?)\b/g,
+                functions: /\b([a-z_]\w*)\s*(?=\()/g,
+                decorators: /(@\w+)/g,
+                self_kw: /\b(self|cls)\b/g,
+                booleans: /\b(True|False|None)\b/g,
+            },
+            javascript: {
+                keywords: /\b(await|async|break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|from|function|if|import|in|instanceof|let|new|of|return|switch|throw|try|typeof|var|void|while|with|yield)\b/g,
+                types: /\b(Array|Boolean|Date|Error|Function|JSON|Map|Math|Number|Object|Promise|Proxy|RegExp|Set|String|Symbol|WeakMap|WeakSet|console|document|window|undefined|null|NaN|Infinity)\b/g,
+                strings: /(`(?:[^`\\]|\\.)*`|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/gm,
+                comments: /(\/\/.*$|\/\*[\s\S]*?\*\/)/gm,
+                numbers: /\b(0[xX][\da-fA-F]+|0[bB][01]+|0[oO][0-7]+|\d[\d_]*\.?\d*(?:e[+-]?\d+)?n?)\b/g,
+                functions: /\b([a-z_$]\w*)\s*(?=\()/g,
+                booleans: /\b(true|false|null|undefined)\b/g,
+            },
+        };
+        LANG_RULES.js = LANG_RULES.javascript;
+        LANG_RULES.ts = LANG_RULES.javascript;
+        LANG_RULES.typescript = LANG_RULES.javascript;
+        LANG_RULES.jsx = LANG_RULES.javascript;
+        LANG_RULES.tsx = LANG_RULES.javascript;
+        LANG_RULES.py = LANG_RULES.python;
+        LANG_RULES.rs = LANG_RULES.rust;
+
+        const GENERIC_RULES = {
+            strings: /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/gm,
+            comments: /(\/\/.*$|\/\*[\s\S]*?\*\/|#.*$)/gm,
+            numbers: /\b(\d[\d_]*\.?\d*(?:e[+-]?\d+)?)\b/g,
+            keywords: /\b(if|else|for|while|return|function|class|import|export|from|try|catch|break|continue|switch|case|default|new|delete|throw|const|let|var|fn|def|pub|struct|enum|impl|match|use|type|interface|extends|implements)\b/g,
+            functions: /\b([a-z_]\w*)\s*(?=\()/g,
+            booleans: /\b(true|false|null|none|nil|undefined)\b/gi,
+        };
+
+        function highlightCode(html, lang) {
+            const rules = LANG_RULES[lang] || GENERIC_RULES;
+            const tokens = [];
+            function addTokens(regex, cls) {
+                regex.lastIndex = 0;
+                let m;
+                while ((m = regex.exec(html)) !== null) {
+                    tokens.push({ start: m.index, end: m.index + m[0].length, cls, text: m[0] });
+                }
+            }
+            if (rules.comments) addTokens(rules.comments, 'tok-cm');
+            if (rules.strings) addTokens(rules.strings, 'tok-str');
+            if (rules.decorators) addTokens(rules.decorators, 'tok-macro');
+            if (rules.macros) addTokens(rules.macros, 'tok-macro');
+            if (rules.keywords) addTokens(rules.keywords, 'tok-kw');
+            if (rules.booleans) addTokens(rules.booleans, 'tok-bool');
+            if (rules.types) addTokens(rules.types, 'tok-type');
+            if (rules.self_kw) addTokens(rules.self_kw, 'tok-self');
+            if (rules.numbers) addTokens(rules.numbers, 'tok-num');
+            if (rules.functions) addTokens(rules.functions, 'tok-fn');
+            tokens.sort((a, b) => a.start - b.start || a.end - b.end);
+            const kept = [];
+            let lastEnd = 0;
+            for (const tok of tokens) {
+                if (tok.start >= lastEnd) { kept.push(tok); lastEnd = tok.end; }
+            }
+            let result = '', pos = 0;
+            for (const tok of kept) {
+                if (tok.start > pos) result += html.slice(pos, tok.start);
+                result += `<span class="${tok.cls}">${tok.text}</span>`;
+                pos = tok.end;
+            }
+            if (pos < html.length) result += html.slice(pos);
+            return result;
+        }
+
+        function highlightAllCodeBlocks() {
+            const blocks = document.querySelectorAll('#preview pre code');
+            blocks.forEach(block => {
+                if (block.dataset.highlighted) return;
+                const langMatch = (block.className || '').match(/language-(\w+)/);
+                const lang = langMatch ? langMatch[1] : '';
+                block.innerHTML = highlightCode(block.innerHTML, lang);
+                block.dataset.highlighted = '1';
+            });
+        }
+
+        const previewEl = document.getElementById('preview');
+        const observer = new MutationObserver(() => { highlightAllCodeBlocks(); });
+        observer.observe(previewEl, { childList: true, subtree: true });
+    </script>
+
+    <script type="module">
+        import init from './pkg/markdown_preview.v1.min.js';
+        init();
+    </script>
+</body>
+</html>

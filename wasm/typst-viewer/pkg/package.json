@@ -1,0 +1,13 @@
+{
+  "name": "typst-viewer",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "typst_viewer_bg.wasm",
+    "typst_viewer.js"
+  ],
+  "main": "typst_viewer.js",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

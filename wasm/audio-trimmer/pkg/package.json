@@ -1,0 +1,15 @@
+{
+  "name": "audio-trimmer",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "audio_trimmer_bg.wasm",
+    "audio_trimmer.js",
+    "audio_trimmer.d.ts"
+  ],
+  "main": "audio_trimmer.js",
+  "types": "audio_trimmer.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

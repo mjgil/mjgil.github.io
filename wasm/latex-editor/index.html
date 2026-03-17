@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaTeX Editor - Rust WASM</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --accent: #a78bfa;
+            --accent-dark: #7c3aed;
+            --editor-bg: #1e1e2e;
+            --editor-text: #cdd6f4;
+            --preview-bg: #fefefe;
+            --preview-text: #1e293b;
+            --header-bg: #0f172a;
+            --divider: #334155;
+        }
+
+        html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+
+        header {
+            background: var(--header-bg); color: #f8fafc; padding: 0 24px; height: 52px;
+            display: flex; align-items: center; gap: 12px; border-bottom: 2px solid var(--accent);
+        }
+        header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; }
+        header h1 span { color: var(--accent); }
+        header .badge { font-size: 11px; background: var(--accent-dark); color: #fff; padding: 2px 8px; border-radius: 9999px; font-weight: 500; }
+
+        .container { display: flex; height: calc(100vh - 52px); }
+
+        .pane-header { height: 36px; display: flex; align-items: center; padding: 0 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .editor-pane { width: 50%; display: flex; flex-direction: column; background: var(--editor-bg); }
+        .editor-pane .pane-header { background: #181825; color: #7f849c; border-bottom: 1px solid #313244; }
+
+        #editor {
+            flex: 1; width: 100%; background: var(--editor-bg); color: var(--editor-text);
+            border: none; outline: none; resize: none; padding: 16px 20px;
+            font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", "Consolas", monospace;
+            font-size: 14px; line-height: 1.6; tab-size: 4;
+        }
+        #editor::selection { background: rgba(167, 139, 250, 0.3); }
+
+        .divider { width: 4px; background: var(--divider); cursor: col-resize; transition: background 0.15s; flex-shrink: 0; }
+        .divider:hover, .divider.active { background: var(--accent); }
+
+        .preview-pane { flex: 1; display: flex; flex-direction: column; background: var(--preview-bg); min-width: 0; }
+        .preview-pane .pane-header { background: #f8fafc; color: #64748b; border-bottom: 1px solid #e2e8f0; }
+
+        #preview {
+            flex: 1; overflow-y: auto; padding: 32px 40px; color: var(--preview-text); line-height: 1.75;
+            font-family: "Computer Modern", "Latin Modern", "STIX Two Text", Georgia, "Times New Roman", serif;
+            font-size: 16px;
+        }
+
+        /* Document title block */
+        #preview .doc-title { text-align: center; margin-bottom: 2em; padding-bottom: 1.5em; border-bottom: 1px solid #e2e8f0; }
+        #preview .doc-title h1 { font-size: 1.8em; font-weight: 700; margin: 0 0 0.3em; border: none; padding: 0; }
+        #preview .doc-author { font-size: 1.1em; color: #475569; margin: 0.2em 0; }
+        #preview .doc-date { font-size: 0.95em; color: #64748b; margin: 0.2em 0; font-style: italic; }
+
+        /* Headings — LaTeX-style numbering feel */
+        #preview h2 { font-size: 1.5em; font-weight: 700; margin: 1.2em 0 0.5em; color: #0f172a; }
+        #preview h3 { font-size: 1.2em; font-weight: 600; margin: 1em 0 0.4em; color: #1e293b; }
+        #preview h4 { font-size: 1.05em; font-weight: 600; margin: 0.8em 0 0.3em; color: #334155; }
+
+        #preview p { margin: 0.6em 0; text-align: justify; }
+        #preview strong { font-weight: 700; }
+        #preview em { font-style: italic; }
+
+        #preview code { background: #f1f5f9; padding: 0.15em 0.4em; border-radius: 3px; font-family: "JetBrains Mono", monospace; font-size: 0.88em; color: #7c3aed; }
+        #preview pre { background: #1e293b; color: #e2e8f0; padding: 16px 20px; border-radius: 6px; overflow-x: auto; margin: 0.8em 0; border: 1px solid #334155; }
+        #preview pre code { background: none; padding: 0; color: inherit; font-size: 13px; }
+
+        #preview blockquote { border-left: 4px solid var(--accent); background: #f5f3ff; padding: 12px 16px; margin: 0.8em 0; border-radius: 0 6px 6px 0; font-style: italic; }
+        #preview blockquote p { margin: 0.3em 0; text-align: left; }
+
+        #preview ul, #preview ol { padding-left: 1.8em; margin: 0.5em 0; }
+        #preview li { margin: 0.25em 0; }
+
+        #preview hr { border: none; height: 1px; background: #e2e8f0; margin: 1.5em 0; }
+
+        /* Display math — no overflow to prevent clipping tops/bottoms of tall symbols */
+        #preview .display-math { margin: 1.2em 0; text-align: center; padding: 0.5em 0; overflow: visible; }
+        #preview .display-math .katex-display { margin: 0; padding: 0.3em 0; overflow: visible; }
+        #preview .display-math .katex { overflow: visible; }
+        #preview .display-math .katex-html { overflow: visible; }
+
+        /* Math error */
+        #preview .math-error { color: #ef4444; background: #fef2f2; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 0.85em; }
+
+        /* LaTeX logo */
+        #preview .latex-logo { font-family: "Computer Modern", "Latin Modern", Georgia, serif; letter-spacing: -0.05em; }
+        #preview .latex-logo sup { font-size: 0.7em; vertical-align: 0.15em; margin-left: -0.36em; margin-right: -0.15em; }
+        #preview .latex-logo sub { font-size: 0.7em; vertical-align: -0.12em; margin-left: -0.1em; margin-right: -0.1em; }
+
+        /* Scrollbar */
+        #editor::-webkit-scrollbar, #preview::-webkit-scrollbar { width: 8px; }
+        #editor::-webkit-scrollbar-track { background: transparent; }
+        #editor::-webkit-scrollbar-thumb { background: #45475a; border-radius: 4px; }
+        #preview::-webkit-scrollbar-track { background: transparent; }
+        #preview::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><span>&Sigma;</span> LaTeX Editor</h1>
+        <span class="badge">Rust + WASM + KaTeX</span>
+    </header>
+    <div class="container">
+        <div class="editor-pane" id="editor-pane">
+            <div class="pane-header">LaTeX Source</div>
+            <textarea id="editor" spellcheck="false" placeholder="Type your LaTeX here..."></textarea>
+        </div>
+        <div class="divider" id="divider"></div>
+        <div class="preview-pane" id="preview-pane">
+            <div class="pane-header">Preview</div>
+            <div id="preview"></div>
+        </div>
+    </div>
+
+    <script>
+        const divider = document.getElementById('divider');
+        const editorPane = document.getElementById('editor-pane');
+        const container = document.querySelector('.container');
+        let isDragging = false;
+
+        divider.addEventListener('mousedown', (e) => {
+            isDragging = true; divider.classList.add('active');
+            document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none';
+            e.preventDefault();
+        });
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const rect = container.getBoundingClientRect();
+            const pct = ((e.clientX - rect.left) / rect.width) * 100;
+            editorPane.style.width = Math.min(Math.max(pct, 20), 80) + '%';
+            editorPane.style.flex = 'none';
+        });
+        document.addEventListener('mouseup', () => {
+            if (isDragging) { isDragging = false; divider.classList.remove('active'); document.body.style.cursor = ''; document.body.style.userSelect = ''; }
+        });
+    </script>
+
+    <script type="module">
+        import init from './pkg/latex_editor.v1.min.js';
+        init();
+    </script>
+</body>
+</html>

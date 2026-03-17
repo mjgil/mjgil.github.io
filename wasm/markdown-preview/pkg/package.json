@@ -1,0 +1,13 @@
+{
+  "name": "markdown-preview",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "markdown_preview_bg.wasm",
+    "markdown_preview.js"
+  ],
+  "main": "markdown_preview.js",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

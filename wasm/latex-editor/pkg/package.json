@@ -1,0 +1,15 @@
+{
+  "name": "latex-editor",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "latex_editor_bg.wasm",
+    "latex_editor.js",
+    "latex_editor.d.ts"
+  ],
+  "main": "latex_editor.js",
+  "types": "latex_editor.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
