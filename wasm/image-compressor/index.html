@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Image Compressor</title>
+<style>
+:root {
+    --bg: #eef4f7;
+    --ink: #173041;
+    --muted: #5d7384;
+    --line: rgba(23, 48, 65, 0.12);
+    --panel: rgba(255, 255, 255, 0.88);
+    --accent: #ff8f3c;
+    --accent-dark: #e1701b;
+    --blue: #2f7ea1;
+    --shadow: 0 24px 56px rgba(22, 45, 61, 0.14);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.82), transparent 34%),
+        linear-gradient(180deg, #f5fbff 0%, var(--bg) 52%, #e6eef3 100%);
+    color: var(--ink);
+}
+
+#app {
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.shell {
+    min-height: calc(100vh - 40px);
+    border-radius: 28px;
+    background: rgba(249, 252, 255, 0.82);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+}
+
+.hero {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 24px;
+    padding: 28px;
+    border-bottom: 1px solid var(--line);
+}
+
+.hero-card,
+.info-card,
+.panel,
+.dropzone {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+}
+
+.hero-card,
+.info-card {
+    padding: 24px;
+}
+
+.eyebrow {
+    margin: 0 0 10px;
+    color: var(--blue);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+.hero-title {
+    margin: 0 0 12px;
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    line-height: 0.96;
+}
+
+.hero-copy,
+.status-copy,
+.panel-copy,
+.meta-copy,
+.stat-copy {
+    color: var(--muted);
+    line-height: 1.6;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.stat {
+    padding: 16px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(23, 48, 65, 0.08);
+}
+
+.stat strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 1.35rem;
+}
+
+.workspace {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+    gap: 22px;
+    padding: 28px;
+}
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.dropzone {
+    padding: 24px;
+    text-align: center;
+    border-style: dashed;
+    border-width: 2px;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.dropzone.active {
+    transform: translateY(-2px);
+    border-color: rgba(255, 143, 60, 0.45);
+}
+
+.dropzone p {
+    margin: 0 0 12px;
+}
+
+.control-card {
+    padding: 18px;
+}
+
+.control-card h3 {
+    margin: 0 0 14px;
+    font-size: 1rem;
+}
+
+.field {
+    margin-bottom: 14px;
+}
+
+.field label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.92rem;
+    color: var(--muted);
+}
+
+.field input[type="range"],
+.field select {
+    width: 100%;
+}
+
+.field select {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 10px 12px;
+    background: #fff;
+    color: var(--ink);
+}
+
+.btn,
+.btn-outline,
+.download-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 12px 16px;
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+    text-decoration: none;
+}
+
+.btn {
+    color: #fff;
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+}
+
+.btn-outline,
+.download-link {
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.82);
+    color: var(--ink);
+}
+
+.btn[disabled] {
+    opacity: 1;
+    cursor: wait;
+    background: #a0adb7;
+    color: #eef4f7;
+}
+
+.results {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.statusbar {
+    padding: 16px 18px;
+}
+
+.comparison {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.panel {
+    padding: 18px;
+}
+
+.panel h3 {
+    margin: 0 0 6px;
+    font-size: 1.08rem;
+}
+
+.processing-state {
+    min-height: 300px;
+    border-radius: 18px;
+    border: 1px dashed rgba(23, 48, 65, 0.16);
+    background: linear-gradient(180deg, rgba(245, 249, 252, 0.95) 0%, rgba(255, 255, 255, 0.92) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    margin: 14px 0;
+}
+
+.loader {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 4px solid rgba(47, 126, 161, 0.18);
+    border-top-color: var(--accent);
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 12px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.preview {
+    width: 100%;
+    height: 300px;
+    object-fit: contain;
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(242, 247, 250, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
+    border: 1px solid rgba(23, 48, 65, 0.08);
+    padding: 16px;
+    margin: 14px 0;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 1024px) {
+    .hero,
+    .workspace,
+    .comparison {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    #app {
+        padding: 10px;
+    }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import init from "./pkg/image_compressor.v1.min.js";
+
+init();
+</script>
+</body>
+</html>

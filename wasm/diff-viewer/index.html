@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rust WASM Diff Viewer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .inputs {
+            display: flex;
+            gap: 20px;
+        }
+        .input-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        textarea {
+            height: 200px;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #diff-output {
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            white-space: pre;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: auto;
+        }
+        .diff-added { background-color: #e6ffec; color: #24292e; }
+        .diff-removed { background-color: #ffeef0; color: #24292e; }
+        .diff-info { color: #586069; font-weight: bold; }
+        .diff-row { display: flex; }
+        .diff-num { width: 50px; text-align: right; padding-right: 10px; color: #afb8c1; user-select: none; }
+        .diff-sign { width: 20px; text-align: center; }
+        .diff-text { flex: 1; }
+        .side-by-side { display: flex; gap: 10px; }
+        .diff-pane { flex: 1; border: 1px solid #eee; min-height: 100px; }
+    </style>
+</head>
+<body>
+    <h1>Diff Viewer</h1>
+    <div class="container">
+        <div class="inputs">
+            <div class="input-group">
+                <label for="input-old">Original Text / File:</label>
+                <input type="file" id="file-old" accept=".txt,.js,.py,.rs,.json,.html,.css">
+                <textarea id="input-old" placeholder="Paste original text here..."></textarea>
+            </div>
+            <div class="input-group">
+                <label for="input-new">New Text / File:</label>
+                <input type="file" id="file-new" accept=".txt,.js,.py,.rs,.json,.html,.css">
+                <textarea id="input-new" placeholder="Paste new text here..."></textarea>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="diff-btn">Generate Diff</button>
+            <label><input type="checkbox" id="unified-view" checked> Unified View</label>
+        </div>
+
+        <div id="diff-output">Diff output will appear here...</div>
+    </div>
+
+    <script type="module">
+        import init from './pkg/diff_viewer.v1.min.js';
+        init().then(() => {
+            console.log("WASM initialized");
+        });
+    </script>
+</body>
+</html>

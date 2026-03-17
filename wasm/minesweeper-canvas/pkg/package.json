@@ -1,0 +1,13 @@
+{
+  "name": "minesweeper-canvas",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "minesweeper_canvas_bg.wasm",
+    "minesweeper_canvas.js"
+  ],
+  "main": "minesweeper_canvas.js",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

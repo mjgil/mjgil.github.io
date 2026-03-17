@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rust WASM JSON Formatter & Validator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            margin-bottom: 20px;
+        }
+        .container {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            min-height: 0;
+        }
+        .sidebar {
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        textarea {
+            flex: 1;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: none;
+            white-space: pre;
+            overflow: auto;
+        }
+        #output {
+            background-color: #fff;
+        }
+        #schema-input {
+            height: 200px;
+            flex: none;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #status {
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #e2e3e5; color: #383d41; }
+
+        #file-input-container {
+            border: 2px dashed #007bff;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Local-First JSON Formatter & Validator</h1>
+        <p>Powered by Rust WASM for handling massive files (up to 50MB+) smoothly.</p>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <div id="file-input-container">
+                <input type="file" id="file-input" accept=".json">
+                <p>Select a large JSON file</p>
+            </div>
+            
+            <div class="controls">
+                <label for="schema-input">JSON Schema (Optional):</label>
+                <textarea id="schema-input" placeholder='{"type": "object", ...}'></textarea>
+                <button id="format-btn">Format & Validate</button>
+                <button id="copy-btn">Copy to Clipboard</button>
+                <button id="download-btn">Download Formatted</button>
+            </div>
+
+            <div id="status" class="info">Ready</div>
+        </div>
+
+        <div class="main-content">
+            <label for="output">Formatted JSON Output:</label>
+            <textarea id="output" readonly placeholder="Output will appear here..."></textarea>
+        </div>
+    </div>
+
+    <script type="module">
+        import init from './pkg/json_formatter.v1.min.js';
+        init().then(() => {
+            console.log("WASM initialized");
+        });
+    </script>
+</body>
+</html>

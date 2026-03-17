@@ -1,0 +1,15 @@
+{
+  "name": "json-formatter",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "json_formatter_bg.wasm",
+    "json_formatter.js",
+    "json_formatter.d.ts"
+  ],
+  "main": "json_formatter.js",
+  "types": "json_formatter.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
