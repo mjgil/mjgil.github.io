@@ -1,0 +1,15 @@
+{
+  "name": "ocr-tesseract",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "ocr_tesseract_bg.wasm",
+    "ocr_tesseract.js",
+    "ocr_tesseract.d.ts"
+  ],
+  "main": "ocr_tesseract.js",
+  "types": "ocr_tesseract.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
