@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OCR Tesseract</title>
+<style>
+:root {
+    --bg: #f4efe5;
+    --paper: rgba(255, 250, 242, 0.84);
+    --paper-strong: rgba(255, 252, 247, 0.95);
+    --ink: #1f1b16;
+    --muted: #62574d;
+    --line: rgba(60, 46, 30, 0.14);
+    --accent: #b54f2f;
+    --accent-deep: #7f2e19;
+    --accent-soft: #e7c5a6;
+    --shadow: 0 28px 70px rgba(73, 53, 31, 0.14);
+    --ok: #295c43;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+    background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.82), transparent 34%),
+        radial-gradient(circle at 85% 15%, rgba(181, 79, 47, 0.14), transparent 26%),
+        linear-gradient(180deg, #fcf7ef 0%, #f4efe5 52%, #eee5d9 100%);
+    color: var(--ink);
+    font-family: "Avenir Next", "Gill Sans", "Trebuchet MS", sans-serif;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(127, 46, 25, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(127, 46, 25, 0.03) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.42), transparent 78%);
+}
+
+#app {
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.shell {
+    position: relative;
+    min-height: calc(100vh - 40px);
+    border: 1px solid var(--line);
+    border-radius: 30px;
+    background: linear-gradient(180deg, rgba(255, 252, 247, 0.8), rgba(250, 243, 232, 0.9));
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    backdrop-filter: blur(14px);
+}
+
+.shell::after {
+    content: "";
+    position: absolute;
+    inset: auto -100px -100px auto;
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(181, 79, 47, 0.18), transparent 66%);
+    pointer-events: none;
+}
+
+.hero,
+.workspace,
+.preview-grid {
+    display: grid;
+}
+
+.hero {
+    grid-template-columns: 1.25fr 0.75fr;
+    gap: 24px;
+    padding: 30px;
+    border-bottom: 1px solid var(--line);
+}
+
+.workspace {
+    grid-template-columns: 340px minmax(0, 1fr);
+    gap: 24px;
+    padding: 30px;
+}
+
+.preview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.hero-card,
+.info-card,
+.panel,
+.dropzone,
+.control-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    backdrop-filter: blur(10px);
+}
+
+.hero-card,
+.info-card,
+.panel,
+.control-card {
+    padding: 22px;
+}
+
+.controls,
+.results {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.eyebrow {
+    margin: 0 0 10px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.hero-title,
+.info-title,
+.panel-title {
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+}
+
+.hero-title {
+    margin: 0 0 14px;
+    font-size: clamp(2.5rem, 5vw, 4.8rem);
+    line-height: 0.95;
+    max-width: 12ch;
+}
+
+.info-title {
+    margin: 0 0 12px;
+    font-size: 1.9rem;
+    line-height: 1.05;
+}
+
+.hero-copy,
+.panel-copy,
+.meta-copy,
+.status-copy {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.65;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.stat {
+    padding: 16px;
+    border-radius: 18px;
+    border: 1px solid rgba(60, 46, 30, 0.08);
+    background: rgba(255, 255, 255, 0.56);
+}
+
+.stat-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.stat strong {
+    font-size: 1.5rem;
+}
+
+.dropzone {
+    padding: 26px;
+    border-style: dashed;
+    border-width: 2px;
+    text-align: center;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.dropzone.active {
+    transform: translateY(-2px);
+    border-color: rgba(181, 79, 47, 0.55);
+    background: var(--paper-strong);
+}
+
+.action-row,
+.action-stack,
+.panel-head {
+    display: flex;
+    gap: 12px;
+}
+
+.action-row,
+.action-stack {
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.action-row {
+    justify-content: center;
+    margin-top: 16px;
+}
+
+.action-stack {
+    margin-top: 18px;
+}
+
+.panel-head {
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+}
+
+.panel-title {
+    margin: 0;
+    font-size: 1.35rem;
+}
+
+.field {
+    margin-bottom: 16px;
+}
+
+.field label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.field input[type="range"],
+.field select {
+    width: 100%;
+}
+
+.field select {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px 14px;
+    font: inherit;
+    color: var(--ink);
+    background: rgba(255, 255, 255, 0.82);
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    color: var(--muted);
+}
+
+.checkbox-row input {
+    width: 18px;
+    height: 18px;
+}
+
+.inline-value {
+    color: var(--accent-deep);
+    font-weight: 700;
+}
+
+.btn,
+.btn-outline,
+.download-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 0 18px;
+    border-radius: 999px;
+    border: 0;
+    text-decoration: none;
+    cursor: pointer;
+    font: inherit;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.btn:hover,
+.btn-outline:hover,
+.download-link:hover {
+    transform: translateY(-1px);
+}
+
+.btn {
+    color: #fff7ef;
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-deep) 100%);
+    box-shadow: 0 12px 24px rgba(127, 46, 25, 0.22);
+}
+
+.btn-outline,
+.download-link {
+    color: var(--ink);
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.74);
+}
+
+.btn-outline.subtle {
+    color: var(--muted);
+}
+
+.btn[disabled] {
+    background: #aa9f95;
+    box-shadow: none;
+    cursor: wait;
+}
+
+.status-panel {
+    position: relative;
+}
+
+.progress-chip,
+.result-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 88px;
+    min-height: 34px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.68);
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.meter {
+    height: 12px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(60, 46, 30, 0.08);
+    margin-bottom: 14px;
+}
+
+.meter-fill {
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-soft) 0%, var(--accent) 50%, var(--accent-deep) 100%);
+    transition: width 0.24s ease;
+}
+
+.preview {
+    width: 100%;
+    height: 320px;
+    object-fit: contain;
+    border-radius: 18px;
+    border: 1px solid rgba(60, 46, 30, 0.08);
+    background:
+        linear-gradient(135deg, rgba(255, 248, 238, 0.94), rgba(246, 237, 224, 0.96)),
+        linear-gradient(90deg, rgba(60, 46, 30, 0.04) 1px, transparent 1px),
+        linear-gradient(rgba(60, 46, 30, 0.04) 1px, transparent 1px);
+    background-size: auto, 22px 22px, 22px 22px;
+    padding: 14px;
+}
+
+.transcript-panel {
+    min-height: 420px;
+}
+
+.result-text {
+    width: 100%;
+    min-height: 270px;
+    resize: vertical;
+    padding: 16px;
+    border-radius: 18px;
+    border: 1px solid rgba(60, 46, 30, 0.1);
+    background: rgba(255, 255, 255, 0.75);
+    color: var(--ink);
+    font: 0.98rem/1.6 "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@media (max-width: 1100px) {
+    .hero,
+    .workspace,
+    .preview-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    #app {
+        padding: 10px;
+    }
+
+    .shell {
+        min-height: calc(100vh - 20px);
+        border-radius: 22px;
+    }
+
+    .hero,
+    .workspace {
+        padding: 16px;
+    }
+
+    .stat-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .panel-head {
+        flex-direction: column;
+    }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import "./ocr-bridge.v1.min.js";
+import init from "./pkg/ocr_tesseract.v1.min.js";
+
+init();
+</script>
+</body>
+</html>
