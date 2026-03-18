@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rain Split</title>
+    <meta
+      name="description"
+      content="Compare rain probability across ECMWF, NOAA, and GEM forecasts for seven curated cities."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="sky"></div>
+    <div class="grain"></div>
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Weather App</p>
+        <h1>Rain Split</h1>
+        <p class="lede">
+          A static forecast comparison board for seven cities. The point is not false certainty.
+          The point is seeing where the rain disagreement lives.
+        </p>
+      </div>
+      <div class="header-meta">
+        <div class="meta-card">
+          <span class="meta-label">Models</span>
+          <strong>ECMWF / NOAA / GEM</strong>
+        </div>
+        <div class="meta-card">
+          <span class="meta-label">Refresh</span>
+          <strong>Every 3 hours</strong>
+        </div>
+        <div class="meta-card">
+          <span class="meta-label">Month View</span>
+          <strong>Past 30 days + next month outlook</strong>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="city-rail">
+        <div class="rail-header">
+          <h2>Cities</h2>
+          <p id="manifest-stamp">Loading forecast board...</p>
+        </div>
+        <div id="city-list" class="city-list"></div>
+      </aside>
+
+      <section class="content">
+        <section id="hero" class="hero-card skeleton"></section>
+
+        <nav class="tab-bar" aria-label="Weather views">
+          <button class="tab is-active" data-tab="compare">Compare</button>
+          <button class="tab" data-tab="hourly">Hourly</button>
+          <button class="tab" data-tab="daily">7-Day</button>
+          <button class="tab" data-tab="month">Month</button>
+        </nav>
+
+        <section id="panel-compare" class="panel"></section>
+        <section id="panel-hourly" class="panel is-hidden"></section>
+        <section id="panel-daily" class="panel is-hidden"></section>
+        <section id="panel-month" class="panel is-hidden"></section>
+      </section>
+    </main>
+
+    <template id="loading-panel">
+      <div class="panel-card skeleton">
+        <div class="skeleton-line wide"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+      </div>
+    </template>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

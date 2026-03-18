@@ -1,0 +1,12 @@
+{
+  "name": "weather-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:data": "node scripts/generate-data.mjs all",
+    "build:data:forecast": "node scripts/generate-data.mjs forecast",
+    "build:data:history": "node scripts/generate-data.mjs history",
+    "build:data:outlook": "node scripts/generate-data.mjs outlook",
+    "build:data:manifest": "node scripts/generate-data.mjs manifest"
+  }
+}
