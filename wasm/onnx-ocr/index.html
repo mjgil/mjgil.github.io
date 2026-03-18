@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ONNX OCR</title>
+<style>
+:root {
+    --bg: #f3f6f9;
+    --panel: rgba(251, 253, 255, 0.9);
+    --panel-strong: rgba(255, 255, 255, 0.98);
+    --ink: #102033;
+    --muted: #5f7186;
+    --line: rgba(16, 32, 51, 0.12);
+    --accent: #0b8f77;
+    --accent-deep: #0a6357;
+    --accent-soft: #8ce0d1;
+    --warning: #ffb84d;
+    --shadow: 0 30px 70px rgba(16, 32, 51, 0.12);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+    background:
+        radial-gradient(circle at 15% 15%, rgba(140, 224, 209, 0.28), transparent 30%),
+        radial-gradient(circle at 85% 10%, rgba(11, 143, 119, 0.14), transparent 24%),
+        linear-gradient(180deg, #f9fcff 0%, #f3f6f9 52%, #ebf0f4 100%);
+    color: var(--ink);
+    font-family: "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(16, 32, 51, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(16, 32, 51, 0.035) 1px, transparent 1px);
+    background-size: 24px 24px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.4), transparent 78%);
+}
+
+#app {
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.shell {
+    min-height: calc(100vh - 40px);
+    border-radius: 30px;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(250, 253, 255, 0.82), rgba(243, 248, 250, 0.92));
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+}
+
+.hero,
+.workspace,
+.preview-grid {
+    display: grid;
+}
+
+.hero {
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 24px;
+    padding: 30px;
+    border-bottom: 1px solid var(--line);
+}
+
+.workspace {
+    grid-template-columns: 340px minmax(0, 1fr);
+    gap: 24px;
+    padding: 30px;
+}
+
+.preview-grid {
+    grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+    gap: 18px;
+}
+
+.hero-card,
+.info-card,
+.panel,
+.dropzone,
+.control-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+}
+
+.hero-card,
+.info-card,
+.panel,
+.control-card {
+    padding: 22px;
+}
+
+.controls,
+.results {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.eyebrow {
+    margin: 0 0 10px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.hero-title,
+.info-title,
+.panel-title {
+    font-family: "Space Grotesk", "Avenir Next", sans-serif;
+}
+
+.hero-title {
+    margin: 0 0 14px;
+    font-size: clamp(2.4rem, 5vw, 4.4rem);
+    line-height: 0.95;
+    max-width: 12ch;
+}
+
+.info-title {
+    margin: 0 0 12px;
+    font-size: 1.85rem;
+    line-height: 1.06;
+}
+
+.hero-copy,
+.panel-copy,
+.meta-copy,
+.status-copy {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.65;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.stat {
+    padding: 16px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.62);
+    border: 1px solid rgba(16, 32, 51, 0.08);
+}
+
+.stat-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.stat strong {
+    font-size: 1.35rem;
+}
+
+.dropzone {
+    padding: 26px;
+    border-style: dashed;
+    border-width: 2px;
+    text-align: center;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.dropzone.active {
+    transform: translateY(-2px);
+    border-color: rgba(11, 143, 119, 0.5);
+}
+
+.action-row,
+.action-stack,
+.panel-head,
+.region-row {
+    display: flex;
+    gap: 12px;
+}
+
+.action-row,
+.action-stack {
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.action-row {
+    justify-content: center;
+    margin-top: 16px;
+}
+
+.action-stack {
+    margin-top: 18px;
+}
+
+.panel-head {
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+}
+
+.panel-title {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.field {
+    margin-bottom: 16px;
+}
+
+.field label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.field select {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px 14px;
+    font: inherit;
+    color: var(--ink);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+}
+
+.checkbox-row input {
+    width: 18px;
+    height: 18px;
+}
+
+.btn,
+.btn-outline,
+.download-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 0 18px;
+    border-radius: 999px;
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+    text-decoration: none;
+}
+
+.btn {
+    color: #ecfffb;
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-deep) 100%);
+    box-shadow: 0 12px 24px rgba(10, 99, 87, 0.22);
+}
+
+.btn-outline,
+.download-link {
+    color: var(--ink);
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.84);
+}
+
+.btn-outline.subtle {
+    color: var(--muted);
+}
+
+.btn[disabled] {
+    background: #93a5ad;
+    box-shadow: none;
+    cursor: wait;
+}
+
+.progress-chip,
+.result-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 88px;
+    min-height: 34px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.74);
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.meter {
+    height: 12px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(16, 32, 51, 0.08);
+    margin-bottom: 14px;
+}
+
+.meter-fill {
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-soft) 0%, var(--accent) 58%, var(--accent-deep) 100%);
+    transition: width 0.24s ease;
+}
+
+.preview-shell {
+    min-height: 360px;
+}
+
+.image-stage {
+    position: relative;
+    width: 100%;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(16, 32, 51, 0.08);
+    background:
+        linear-gradient(135deg, rgba(248, 252, 255, 0.95), rgba(238, 245, 248, 0.96)),
+        linear-gradient(90deg, rgba(16, 32, 51, 0.04) 1px, transparent 1px),
+        linear-gradient(rgba(16, 32, 51, 0.04) 1px, transparent 1px);
+    background-size: auto, 22px 22px, 22px 22px;
+}
+
+.preview-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+}
+
+.overlay-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.ocr-box {
+    position: absolute;
+    border: 2px solid rgba(255, 184, 77, 0.95);
+    background: rgba(255, 184, 77, 0.12);
+    border-radius: 8px;
+    box-shadow: inset 0 0 0 1px rgba(16, 32, 51, 0.05);
+}
+
+.regions-list {
+    display: grid;
+    gap: 10px;
+    max-height: 430px;
+    overflow: auto;
+}
+
+.region-card {
+    padding: 12px 14px;
+    border-radius: 16px;
+    border: 1px solid rgba(16, 32, 51, 0.08);
+    background: var(--panel-strong);
+}
+
+.region-card p {
+    margin: 8px 0;
+    line-height: 1.55;
+}
+
+.region-row {
+    justify-content: space-between;
+    align-items: center;
+}
+
+.region-box {
+    display: inline-block;
+    color: var(--muted);
+    font-size: 0.82rem;
+}
+
+.transcript-panel {
+    min-height: 420px;
+}
+
+.result-text {
+    width: 100%;
+    min-height: 270px;
+    resize: vertical;
+    padding: 16px;
+    border-radius: 18px;
+    border: 1px solid rgba(16, 32, 51, 0.1);
+    background: rgba(255, 255, 255, 0.82);
+    color: var(--ink);
+    font: 0.98rem/1.6 "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@media (max-width: 1120px) {
+    .hero,
+    .workspace,
+    .preview-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    #app {
+        padding: 10px;
+    }
+
+    .shell {
+        min-height: calc(100vh - 20px);
+        border-radius: 22px;
+    }
+
+    .hero,
+    .workspace {
+        padding: 16px;
+    }
+
+    .stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .panel-head {
+        flex-direction: column;
+    }
+}
+</style>
+<!-- Import map for bare specifiers - allows using npm packages without bundler -->
+
+<script type="importmap">
+{
+  "imports": {
+    "onnxruntime-web": "https://esm.sh/onnxruntime-web@1.24.3",
+    "ppu-ocv/web": "https://esm.sh/ppu-ocv@2.0.0/index.web.js",
+    "@techstark/opencv-js": "https://esm.sh/@techstark/opencv-js@4.10.0-release.1"
+  }
+}
+</script>
+  <script type="module" crossorigin src="./assets/index-CvWJ0uqX.js"></script>
+</head>
+<body>
+<div id="app"></div>
+</body>
+</html>
