@@ -65,8 +65,8 @@
         .diff-num { width: 50px; text-align: right; padding-right: 10px; color: #afb8c1; user-select: none; }
         .diff-sign { width: 20px; text-align: center; }
         .diff-text { flex: 1; }
-        .side-by-side { display: flex; gap: 10px; }
-        .diff-pane { flex: 1; border: 1px solid #eee; min-height: 100px; }
+        .side-by-side { display: flex; gap: 10px; white-space: pre-wrap; overflow-wrap: break-word; }
+        .diff-pane { flex: 1; min-width: 0; overflow-x: auto; border: 1px solid #eee; min-height: 100px; }
     </style>
 </head>
 <body>
