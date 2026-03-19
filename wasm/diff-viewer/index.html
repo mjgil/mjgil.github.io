@@ -65,8 +65,10 @@
         .diff-num { width: 50px; text-align: right; padding-right: 10px; color: #afb8c1; user-select: none; }
         .diff-sign { width: 20px; text-align: center; }
         .diff-text { flex: 1; }
-        .side-by-side { display: flex; gap: 10px; white-space: pre-wrap; overflow-wrap: break-word; }
-        .diff-pane { flex: 1; min-width: 0; overflow-x: auto; border: 1px solid #eee; min-height: 100px; }
+        .side-by-side { display: flex; gap: 20px; white-space: pre-wrap; overflow-wrap: break-word; }
+        #diff-output:has(.side-by-side) { background: transparent; border: none; padding: 0; }
+        .diff-pane { flex: 1; min-width: 0; overflow-x: auto; border: 1px solid #ddd; border-radius: 4px; min-height: 100px; background: #fff; padding: 20px; }
+        .diff-pane-empty { min-height: 0; }
         /* Floating diff nav widget */
         #diff-nav-float {
             display: none;
@@ -149,7 +151,7 @@
     </div>
 
     <script type="module">
-        import init from './pkg/diff_viewer.v2.min.js';
+        import init from './pkg/diff_viewer.v3.min.js';
         init().then(() => {
             console.log("WASM initialized");
         });
@@ -162,21 +164,16 @@
         const posLabel = document.getElementById('diff-position');
         let diffChunks = [];   // each entry is the first element of a contiguous diff chunk
         let currentChunk = -1; // index into diffChunks
-        let hasDiff = false;   // tracks whether a real diff is currently displayed
-        const PLACEHOLDER_HTML = '<span class="placeholder-text">Diff output will appear here...</span>';
+
 
         function hasDiffContent() {
             return diffOutput.querySelectorAll('.diff-row').length > 0;
         }
 
-        function showPlaceholder() {
-            diffOutput.innerHTML = PLACEHOLDER_HTML;
-        }
-
         function collectDiffChunks() {
             diffChunks = [];
             currentChunk = -1;
-            hasDiff = hasDiffContent();
+            const hasDiff = hasDiffContent();
 
             // Show/hide the floating nav
             if (!hasDiff) {
@@ -273,23 +270,7 @@
         });
 
         // Re-collect chunks whenever diff output changes.
-        // Also restore placeholder if Rust wrote empty content (identical texts or empty inputs).
-        let settingPlaceholder = false;
         const observer = new MutationObserver(() => {
-            if (settingPlaceholder) return;
-
-            const hasRows = diffOutput.querySelectorAll('.diff-row').length > 0;
-            const hasPlaceholder = diffOutput.querySelector('.placeholder-text') !== null;
-
-            if (!hasRows && !hasPlaceholder) {
-                // Rust set innerHTML to empty diff (identical texts) — show placeholder
-                settingPlaceholder = true;
-                showPlaceholder();
-                navFloat.classList.remove('visible');
-                settingPlaceholder = false;
-                return;
-            }
-
             collectDiffChunks();
         });
         observer.observe(diffOutput, { childList: true, subtree: true });
