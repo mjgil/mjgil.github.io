@@ -265,6 +265,111 @@
             margin: 0.25em 0;
         }
 
+        #preview table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            overflow: hidden;
+            font-size: 0.96em;
+        }
+
+        #preview thead {
+            background: #e2e8f0;
+        }
+
+        #preview th,
+        #preview td {
+            padding: 0.75em 0.9em;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+
+        #preview th {
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        #preview tbody tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        #preview tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        #preview dl {
+            margin: 1em 0;
+        }
+
+        #preview dt {
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 0.9em;
+        }
+
+        #preview dd {
+            margin: 0.35em 0 0.35em 1.25em;
+            color: #334155;
+        }
+
+        #preview del {
+            color: #64748b;
+        }
+
+        #preview mark {
+            background: #fef08a;
+            color: #1e293b;
+            padding: 0.08em 0.25em;
+            border-radius: 4px;
+        }
+
+        #preview sub,
+        #preview sup {
+            font-size: 0.78em;
+        }
+
+        #preview ul.task-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        #preview .task-list-item {
+            margin: 0.45em 0;
+        }
+
+        #preview .task-list-item label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55em;
+        }
+
+        #preview .task-list-item input {
+            accent-color: var(--accent-dark);
+        }
+
+        #preview .footnote-ref,
+        #preview .footnote-backref {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+
+        #preview .footnotes {
+            margin-top: 2em;
+            padding-top: 0.5em;
+            color: #475569;
+            font-size: 0.95em;
+        }
+
+        #preview .footnotes ol {
+            padding-left: 1.4em;
+        }
+
+        #preview .footnotes li {
+            margin: 0.5em 0;
+        }
+
         #preview hr {
             border: none;
             height: 2px;
@@ -452,7 +557,7 @@
     </script>
 
     <script type="module">
-        import init from './pkg/markdown_preview.v1.min.js';
+        import init from './pkg/markdown_preview.v4.min.js';
         init();
     </script>
 </body>

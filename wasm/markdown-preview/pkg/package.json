@@ -4,9 +4,11 @@
   "version": "0.1.0",
   "files": [
     "markdown_preview_bg.wasm",
-    "markdown_preview.js"
+    "markdown_preview.js",
+    "markdown_preview.d.ts"
   ],
   "main": "markdown_preview.js",
+  "types": "markdown_preview.d.ts",
   "sideEffects": [
     "./snippets/*"
   ]
