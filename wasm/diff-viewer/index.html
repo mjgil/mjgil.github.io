@@ -67,6 +67,54 @@
         .diff-text { flex: 1; }
         .side-by-side { display: flex; gap: 10px; white-space: pre-wrap; overflow-wrap: break-word; }
         .diff-pane { flex: 1; min-width: 0; overflow-x: auto; border: 1px solid #eee; min-height: 100px; }
+        /* Floating diff nav widget */
+        #diff-nav-float {
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+            padding: 10px 16px;
+            z-index: 1000;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+        #diff-nav-float.visible { display: flex; }
+        #diff-nav-float .nav-btn {
+            padding: 6px 14px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+        #diff-nav-float .nav-btn:hover { background-color: #218838; }
+        #diff-nav-float .diff-position-label {
+            font-size: 0.9em;
+            color: #333;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+        }
+        .diff-row.diff-jump-highlight {
+            outline: 2px solid #f0ad4e;
+            outline-offset: -1px;
+            animation: diff-flash 0.6s ease-out;
+        }
+        @keyframes diff-flash {
+            0% { background-color: #ffeeba; }
+            100% { background-color: inherit; }
+        }
+        #diff-output .placeholder-text {
+            color: #999;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -90,14 +138,161 @@
             <label><input type="checkbox" id="unified-view" checked> Unified View</label>
         </div>
 
-        <div id="diff-output">Diff output will appear here...</div>
+        <div id="diff-output"><span class="placeholder-text">Diff output will appear here...</span></div>
+
+        <!-- Floating diff navigation -->
+        <div id="diff-nav-float">
+            <button id="prev-diff-btn" class="nav-btn" title="Previous diff (Shift+F7)">&#9650; Prev</button>
+            <span id="diff-position" class="diff-position-label"></span>
+            <button id="next-diff-btn" class="nav-btn" title="Next diff (F7)">Next &#9660;</button>
+        </div>
     </div>
 
     <script type="module">
-        import init from './pkg/diff_viewer.v1.min.js';
+        import init from './pkg/diff_viewer.v2.min.js';
         init().then(() => {
             console.log("WASM initialized");
         });
+
+        // --- Jump-to-diff navigation ---
+        const diffOutput = document.getElementById('diff-output');
+        const navFloat = document.getElementById('diff-nav-float');
+        const prevBtn = document.getElementById('prev-diff-btn');
+        const nextBtn = document.getElementById('next-diff-btn');
+        const posLabel = document.getElementById('diff-position');
+        let diffChunks = [];   // each entry is the first element of a contiguous diff chunk
+        let currentChunk = -1; // index into diffChunks
+        let hasDiff = false;   // tracks whether a real diff is currently displayed
+        const PLACEHOLDER_HTML = '<span class="placeholder-text">Diff output will appear here...</span>';
+
+        function hasDiffContent() {
+            return diffOutput.querySelectorAll('.diff-row').length > 0;
+        }
+
+        function showPlaceholder() {
+            diffOutput.innerHTML = PLACEHOLDER_HTML;
+        }
+
+        function collectDiffChunks() {
+            diffChunks = [];
+            currentChunk = -1;
+            hasDiff = hasDiffContent();
+
+            // Show/hide the floating nav
+            if (!hasDiff) {
+                navFloat.classList.remove('visible');
+                updatePositionLabel();
+                return;
+            }
+
+            // Collect chunk leaders using data-chunk attributes set by Rust.
+            // Each unique data-chunk value = one logical change.
+            // We pick the first element with each chunk id as the scroll target.
+            const chunkEls = diffOutput.querySelectorAll('[data-chunk]');
+            if (chunkEls.length === 0) {
+                navFloat.classList.remove('visible');
+                updatePositionLabel();
+                return;
+            }
+
+            const seen = new Set();
+            chunkEls.forEach(el => {
+                const id = el.getAttribute('data-chunk');
+                if (!seen.has(id)) {
+                    seen.add(id);
+                    diffChunks.push(el);
+                }
+            });
+
+            // Sort by visual Y position so navigation follows page order,
+            // not DOM order (matters for side-by-side where left pane DOM
+            // comes entirely before right pane DOM).
+            diffChunks.sort((a, b) => {
+                const ay = a.getBoundingClientRect().top;
+                const by = b.getBoundingClientRect().top;
+                return ay - by;
+            });
+
+            navFloat.classList.add('visible');
+
+            // Auto-navigate to the first diff on fresh generation
+            if (diffChunks.length > 0 && currentChunk < 0) {
+                jumpToChunk(0);
+            } else {
+                updatePositionLabel();
+            }
+        }
+
+        function jumpToChunk(index) {
+            if (diffChunks.length === 0) return;
+            // Remove old highlight
+            const oldHighlight = diffOutput.querySelector('.diff-jump-highlight');
+            if (oldHighlight) oldHighlight.classList.remove('diff-jump-highlight');
+
+            currentChunk = index;
+            const target = diffChunks[currentChunk];
+            // Re-trigger animation by force reflow
+            target.classList.remove('diff-jump-highlight');
+            void target.offsetWidth;
+            target.classList.add('diff-jump-highlight');
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            updatePositionLabel();
+        }
+
+        function jumpNext() {
+            if (diffChunks.length === 0) return;
+            const next = (currentChunk + 1) % diffChunks.length;
+            jumpToChunk(next);
+        }
+
+        function jumpPrev() {
+            if (diffChunks.length === 0) return;
+            const prev = (currentChunk - 1 + diffChunks.length) % diffChunks.length;
+            jumpToChunk(prev);
+        }
+
+        function updatePositionLabel() {
+            if (diffChunks.length === 0) {
+                posLabel.textContent = '';
+            } else if (currentChunk < 0) {
+                posLabel.textContent = `${diffChunks.length} change${diffChunks.length === 1 ? '' : 's'}`;
+            } else {
+                posLabel.textContent = `${currentChunk + 1} / ${diffChunks.length}`;
+            }
+        }
+
+        nextBtn.addEventListener('click', jumpNext);
+        prevBtn.addEventListener('click', jumpPrev);
+
+        // Keyboard shortcuts: F7 = next, Shift+F7 = prev
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F7') {
+                e.preventDefault();
+                if (e.shiftKey) { jumpPrev(); } else { jumpNext(); }
+            }
+        });
+
+        // Re-collect chunks whenever diff output changes.
+        // Also restore placeholder if Rust wrote empty content (identical texts or empty inputs).
+        let settingPlaceholder = false;
+        const observer = new MutationObserver(() => {
+            if (settingPlaceholder) return;
+
+            const hasRows = diffOutput.querySelectorAll('.diff-row').length > 0;
+            const hasPlaceholder = diffOutput.querySelector('.placeholder-text') !== null;
+
+            if (!hasRows && !hasPlaceholder) {
+                // Rust set innerHTML to empty diff (identical texts) — show placeholder
+                settingPlaceholder = true;
+                showPlaceholder();
+                navFloat.classList.remove('visible');
+                settingPlaceholder = false;
+                return;
+            }
+
+            collectDiffChunks();
+        });
+        observer.observe(diffOutput, { childList: true, subtree: true });
     </script>
 </body>
 </html>

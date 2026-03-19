@@ -4,9 +4,11 @@
   "version": "0.1.0",
   "files": [
     "diff_viewer_bg.wasm",
-    "diff_viewer.js"
+    "diff_viewer.js",
+    "diff_viewer.d.ts"
   ],
   "main": "diff_viewer.js",
+  "types": "diff_viewer.d.ts",
   "sideEffects": [
     "./snippets/*"
   ]
