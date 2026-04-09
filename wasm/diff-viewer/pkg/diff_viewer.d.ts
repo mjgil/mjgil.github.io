@@ -4,6 +4,7 @@
 export class DiffApp {
     free(): void;
     [Symbol.dispose](): void;
+    generate_property_diff(old_text: string, new_text: string, unified: boolean, inline_diff: boolean): string;
     generate_side_by_side_diff(old_text: string, new_text: string): string;
     generate_unified_diff(old_text: string, new_text: string): string;
     constructor();
@@ -16,12 +17,13 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly __wbg_diffapp_free: (a: number, b: number) => void;
-    readonly diffapp_new: () => number;
-    readonly diffapp_generate_unified_diff: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly diffapp_generate_property_diff: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number];
     readonly diffapp_generate_side_by_side_diff: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly diffapp_generate_unified_diff: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly diffapp_new: () => number;
     readonly main: () => void;
-    readonly wasm_bindgen__closure__destroy__h8152ebf7ed3a713f: (a: number, b: number) => void;
-    readonly wasm_bindgen__convert__closures_____invoke__ha8fc93c334198ad0: (a: number, b: number, c: any) => void;
+    readonly wasm_bindgen__closure__destroy__h3df8e5b2fb5d3819: (a: number, b: number) => void;
+    readonly wasm_bindgen__convert__closures_____invoke__h05eabf4823b4d06a: (a: number, b: number, c: any) => void;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_exn_store: (a: number) => void;

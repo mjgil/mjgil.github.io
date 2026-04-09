@@ -9,11 +9,15 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 20px;
             background-color: #f4f4f9;
+            overflow-x: hidden;
         }
+        *, *::before, *::after { box-sizing: border-box; }
         .container {
             display: flex;
             flex-direction: column;
             gap: 20px;
+            max-width: 100%;
+            box-sizing: border-box;
         }
         .inputs {
             display: flex;
@@ -62,9 +66,59 @@
         .diff-removed { background-color: #ffeef0; color: #24292e; }
         .diff-info { color: #586069; font-weight: bold; }
         .diff-row { display: flex; }
-        .diff-num { width: 50px; text-align: right; padding-right: 10px; color: #afb8c1; user-select: none; }
-        .diff-sign { width: 20px; text-align: center; }
+        .diff-num { min-width: 40px; text-align: right; padding-right: 8px; color: #afb8c1; user-select: none; border-right: 1px solid #eaeef2; }
+        .diff-sign { width: 20px; text-align: center; flex-shrink: 0; }
         .diff-text { flex: 1; }
+        .diff-highlight { padding: 1px 0; border-radius: 2px; }
+        .diff-removed .diff-highlight { background-color: #f5a3ad; }
+        .diff-added .diff-highlight { background-color: #7ee89b; }
+        .diff-spacer { background-color: #f0f0f0; min-height: 1.2em; }
+        .prop-path { background-color: #f1f0ff; color: #6f42c1; padding: 4px 10px; margin-top: 8px; border-left: 3px solid #6f42c1; position: relative; }
+        .prop-path-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .prop-path:hover { z-index: 100; }
+        .prop-path:hover .prop-path-text { overflow: visible; white-space: normal; word-break: break-all; background-color: #f1f0ff; position: relative; }
+        .split-grid { display: grid; grid-template-columns: 1fr 20px 1fr; white-space: pre-wrap; overflow-wrap: break-word; overflow: hidden; font-family: 'Courier New', Courier, monospace; max-width: 100%; box-sizing: border-box; }
+        .split-grid > .diff-row { display: flex; padding: 0; min-height: 1.2em; min-width: 0; overflow: hidden; }
+        .split-grid > .diff-left { grid-column: 1; background: #fff; }
+        .split-grid > .diff-right { grid-column: 3; background: #fff; }
+        .split-grid > .diff-added { background-color: #e6ffec; }
+        .split-grid > .diff-removed { background-color: #ffeef0; }
+        .split-grid > .prop-path.diff-left,
+        .split-grid > .prop-path.diff-right { background-color: #f1f0ff; }
+        .split-grid > .diff-gutter { grid-column: 2; background: #f4f4f9; }
+        .split-grid.prop-split {
+            position: relative;
+            grid-template-columns: 20px minmax(0, 1fr) 20px 20px 20px minmax(0, 1fr) 20px;
+            padding-top: 20px;
+        }
+        .split-grid.prop-split::before,
+        .split-grid.prop-split::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: calc((100% - 20px) / 2);
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .split-grid.prop-split::before { left: 0; }
+        .split-grid.prop-split::after { right: 0; }
+        .split-grid.prop-split > * { position: relative; z-index: 1; }
+        .split-grid.prop-split > .diff-left { grid-column: 2; }
+        .split-grid.prop-split > .diff-right { grid-column: 6; }
+        .split-grid.prop-split > .diff-gutter { grid-column: 4; background: #f4f4f9; }
+        .split-grid.prop-split > .diff-spacer { background-color: #fff; }
+        .split-grid > .diff-row.prop-path { padding: 4px 10px 4px 5px; }
+        .split-grid > .diff-row .diff-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+        .split-grid > .prop-path { overflow: hidden; }
+        .split-grid > .prop-path .prop-path-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .split-grid > .prop-path:hover { z-index: 100; position: relative; }
+        .split-grid > .prop-path:hover .prop-path-text { overflow: visible; white-space: normal; word-break: break-all; background-color: #f1f0ff; }
+        #diff-output:has(.split-grid) { background: transparent; border: none; padding: 0; }
+        /* Legacy side-by-side kept for placeholder only */
         .side-by-side { display: flex; gap: 20px; white-space: pre-wrap; overflow-wrap: break-word; }
         #diff-output:has(.side-by-side) { background: transparent; border: none; padding: 0; }
         .diff-pane { flex: 1; min-width: 0; overflow-x: auto; border: 1px solid #ddd; border-radius: 4px; min-height: 100px; background: #fff; padding: 20px; }
@@ -105,9 +159,15 @@
             text-align: center;
         }
         .diff-row.diff-jump-highlight {
-            outline: 2px solid #f0ad4e;
-            outline-offset: -1px;
+            border-left: 2px solid #f0ad4e;
+            border-right: 2px solid #f0ad4e;
             animation: diff-flash 0.6s ease-out;
+        }
+        .diff-row.diff-jump-first {
+            border-top: 2px solid #f0ad4e;
+        }
+        .diff-row.diff-jump-last {
+            border-bottom: 2px solid #f0ad4e;
         }
         @keyframes diff-flash {
             0% { background-color: #ffeeba; }
@@ -149,6 +209,8 @@
         <div class="controls">
             <button id="diff-btn">Generate Diff</button>
             <label><input type="checkbox" id="unified-view" checked> Unified View</label>
+            <label id="prop-diff-label" style="display:none;"><input type="checkbox" id="prop-diff-view"> Property Diff (JSON)</label>
+            <label id="elem-diff-label" style="display:none;"><input type="checkbox" id="elem-diff-view"> Element Diffs</label>
         </div>
 
         <div id="diff-output"><span class="placeholder-text">Diff output will appear here...</span></div>
@@ -162,10 +224,38 @@
     </div>
 
     <script type="module">
-        import init from './pkg/diff_viewer.v4.min.js';
+        import init from './pkg/diff_viewer.v6.min.js';
         init().then(() => {
             console.log("WASM initialized");
         });
+
+        // Show/hide Property Diff toggle when both inputs look like JSON
+        const propDiffLabel = document.getElementById('prop-diff-label');
+        const elemDiffLabel = document.getElementById('elem-diff-label');
+        const propDiffCheckbox = document.getElementById('prop-diff-view');
+        const inputOld = document.getElementById('input-old');
+        const inputNew = document.getElementById('input-new');
+
+        function looksLikeJson(text) {
+            const trimmed = text.trim();
+            return (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+                   (trimmed.startsWith('[') && trimmed.endsWith(']'));
+        }
+
+        function updatePropDiffVisibility() {
+            const show = looksLikeJson(inputOld.value) && looksLikeJson(inputNew.value);
+            propDiffLabel.style.display = show ? 'inline' : 'none';
+        }
+
+        function updateElemDiffVisibility() {
+            elemDiffLabel.style.display = propDiffCheckbox.checked ? 'inline' : 'none';
+        }
+
+        inputOld.addEventListener('input', updatePropDiffVisibility);
+        inputNew.addEventListener('input', updatePropDiffVisibility);
+        propDiffCheckbox.addEventListener('change', updateElemDiffVisibility);
+        document.getElementById('file-old').addEventListener('change', () => setTimeout(updatePropDiffVisibility, 200));
+        document.getElementById('file-new').addEventListener('change', () => setTimeout(updatePropDiffVisibility, 200));
 
         // --- Jump-to-diff navigation ---
         const diffOutput = document.getElementById('diff-output');
@@ -173,8 +263,9 @@
         const prevBtn = document.getElementById('prev-diff-btn');
         const nextBtn = document.getElementById('next-diff-btn');
         const posLabel = document.getElementById('diff-position');
-        let diffChunks = [];   // each entry is the first element of a contiguous diff chunk
+        let diffChunks = [];   // each entry is an array of elements sharing the same chunk id
         let currentChunk = -1; // index into diffChunks
+        let activeChunkElements = [];
 
 
         function hasDiffContent() {
@@ -184,66 +275,96 @@
         function collectDiffChunks() {
             diffChunks = [];
             currentChunk = -1;
-            const hasDiff = hasDiffContent();
 
-            // Show/hide the floating nav
-            if (!hasDiff) {
+            if (!hasDiffContent()) {
                 navFloat.classList.remove('visible');
                 updatePositionLabel();
                 return;
             }
 
-            // Collect chunk leaders using data-chunk attributes set by Rust.
-            // Each unique data-chunk value = one logical change.
-            // We pick the first element with each chunk id as the scroll target.
-            const chunkEls = diffOutput.querySelectorAll('[data-chunk]');
-            if (chunkEls.length === 0) {
-                navFloat.classList.remove('visible');
-                updatePositionLabel();
-                return;
-            }
+            const grid = diffOutput.querySelector('.split-grid');
 
-            const seen = new Set();
-            chunkEls.forEach(el => {
-                const id = el.getAttribute('data-chunk');
-                if (!seen.has(id)) {
-                    seen.add(id);
-                    diffChunks.push(el);
+            if (grid) {
+                // Single O(N) pass: step through grid children in triplets (left, gutter, right)
+                const children = grid.children;
+                const len = children.length;
+                for (let i = 0; i < len; i += 3) {
+                    const left = children[i];
+                    if (!left.hasAttribute('data-chunk')) continue;
+                    const size = parseInt(left.getAttribute('data-chunk-size') || '1', 10);
+                    const elements = [];
+                    for (let r = 0; r < size; r++) {
+                        const base = i + r * 3;
+                        if (base + 2 < len) {
+                            elements.push(children[base], children[base + 1], children[base + 2]);
+                        }
+                    }
+                    diffChunks.push(elements);
                 }
-            });
-
-            // Sort by visual Y position so navigation follows page order,
-            // not DOM order (matters for side-by-side where left pane DOM
-            // comes entirely before right pane DOM).
-            diffChunks.sort((a, b) => {
-                const ay = a.getBoundingClientRect().top;
-                const by = b.getBoundingClientRect().top;
-                return ay - by;
-            });
-
-            navFloat.classList.add('visible');
-
-            // Auto-navigate to the first diff on fresh generation
-            if (diffChunks.length > 0 && currentChunk < 0) {
-                jumpToChunk(0);
             } else {
+                // Unified view: each data-chunk element is a standalone anchor
+                const chunkEls = diffOutput.querySelectorAll('[data-chunk]');
+                for (const el of chunkEls) {
+                    diffChunks.push([el]);
+                }
+            }
+
+            // Already in DOM order from the single pass — no sort needed for grid.
+            // Unified is also in DOM order from querySelectorAll.
+            if (diffChunks.length > 0) {
+                navFloat.classList.add('visible');
+                if (currentChunk < 0) {
+                    if (grid && grid.classList.contains('prop-split')) {
+                        updatePositionLabel();
+                    } else {
+                        jumpToChunk(0);
+                    }
+                } else {
+                    updatePositionLabel();
+                }
+            } else {
+                navFloat.classList.remove('visible');
                 updatePositionLabel();
             }
         }
 
         function jumpToChunk(index) {
             if (diffChunks.length === 0) return;
-            // Remove old highlight
-            const oldHighlight = diffOutput.querySelector('.diff-jump-highlight');
-            if (oldHighlight) oldHighlight.classList.remove('diff-jump-highlight');
+            activeChunkElements.forEach(el => {
+                el.classList.remove('diff-jump-highlight', 'diff-jump-first', 'diff-jump-last');
+            });
+            if (activeChunkElements.length > 0) {
+                void diffOutput.offsetHeight;
+            }
+            activeChunkElements = [];
 
             currentChunk = index;
-            const target = diffChunks[currentChunk];
-            // Re-trigger animation by force reflow
-            target.classList.remove('diff-jump-highlight');
-            void target.offsetWidth;
-            target.classList.add('diff-jump-highlight');
-            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const targets = diffChunks[currentChunk];
+
+            // Separate left/right, excluding spacers (don't border the empty side)
+            const leftEls = targets.filter(el =>
+                el.classList.contains('diff-left') && !el.classList.contains('diff-spacer'));
+            const rightEls = targets.filter(el =>
+                el.classList.contains('diff-right') && !el.classList.contains('diff-spacer'));
+
+            // For split view, border each non-empty side independently
+            // For unified view (no diff-left/right), fall back to all targets
+            const groups = (leftEls.length || rightEls.length)
+                ? [leftEls, rightEls].filter(g => g.length > 0)
+                : [targets];
+
+            groups.forEach(group => {
+                group.forEach((el, i) => {
+                    el.classList.add('diff-jump-highlight');
+                    if (i === 0) el.classList.add('diff-jump-first');
+                    if (i === group.length - 1) el.classList.add('diff-jump-last');
+                    activeChunkElements.push(el);
+                });
+            });
+
+            // Scroll to first non-spacer element
+            const scrollTarget = (leftEls[0] || rightEls[0] || targets[0]);
+            scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
             updatePositionLabel();
         }
 
