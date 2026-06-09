@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CI/CD Workflow Simulation - Component</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Basic styling - can be kept minimal as component adds its own if needed */
+        body {
+            padding-bottom: 2rem; /* Add padding to prevent instances running off screen */
+        }
+        .simulator-container {
+            /* Max width now handled by Tailwind */
+            margin: 2rem auto;
+            padding: 1rem;
+            border: 1px solid #4b5563; /* Match dashboard border (gray-600) */
+            border-radius: 8px;
+            background-color: #374151; /* bg-gray-700 */
+        }
+    </style>
+</head>
+<body class="bg-gray-800 font-sans">
+
+    <div class="text-center mt-8">
+        <h1 class="text-3xl font-bold mb-6 text-gray-200">CI/CD Workflow Simulation - Components</h1>
+    </div>
+
+    <!-- Container for the Dashboard -->
+    <div id="dashboard-container" class="w-full max-w-md mx-auto mb-4 p-2 border border-gray-600 rounded-lg bg-gray-700">
+        <p class="text-gray-400 text-center">Loading Dashboard...</p>
+    </div>
+
+    <!-- Container for the first simulator instance -->
+    <div id="simulator1" class="simulator-container w-full max-w-4xl">
+        <!-- CiCdSimulator will populate this -->
+        <p class="text-gray-400">Loading Simulator 1...</p>
+    </div>
+
+    <!-- Container for the second simulator instance -->
+    <div id="simulator2" class="simulator-container w-full max-w-4xl">
+        <p class="text-gray-400">Loading Simulator 2...</p>
+    </div>
+
+    <!-- Container for the third simulator instance -->
+    <div id="simulator3" class="simulator-container w-full max-w-4xl">
+        <p class="text-gray-400">Loading Simulator 3...</p>
+    </div>
+
+
+    <!-- Container for the Dashboard -->
+    <div id="dashboard-container2" class="w-full max-w-md mx-auto mb-4 p-2 border border-gray-600 rounded-lg bg-gray-700">
+        <p class="text-gray-400 text-center">Loading Dashboard...</p>
+    </div>
+    <!-- Container for the fourth simulator instance -->
+    <div id="simulator4" class="simulator-container w-full max-w-4xl">
+        <p class="text-gray-400">Loading Simulator 4...</p>
+    </div>
+
+
+    <!-- Scripts: Load constants and class definitions first -->
+    <script src="constants.js"></script>
+    <script src="model.js"></script>
+    <script src="view.js"></script>
+    <script src="controller.js"></script>
+    <!-- Load the main component class -->
+    <script src="CiCdSimulator.js"></script>
+    <!-- Load the new Dashboard component -->
+    <script src="Dashboard.js"></script>
+
+    <!-- Instantiate the components -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // console.log("DOM Loaded - Initializing Components...");
+
+            // Instantiate the Dashboard *first* with interlacing
+            const dashboard = new Dashboard('#dashboard-container', {
+                 interlacedDuration: 3000 // Add effect (e.g., 3 seconds)
+            });
+
+            // Instance 1: With controls, starts on button click
+            const sim1 = new CiCdSimulator('#simulator1', {
+                showLog: true,
+                showControls: true,
+                dashboard: dashboard,
+                interlacedDuration: 5000
+            });
+
+            // Instance 2: No controls/log, starts on visibility
+            const sim2 = new CiCdSimulator('#simulator2', {
+                showLog: false,
+                showControls: false,
+                dashboard: dashboard,
+                interlacedDuration: 5000
+            });
+
+            // Instance 3: No controls/log, starts on visibility
+            const sim3 = new CiCdSimulator('#simulator3', {
+                showLog: false,
+                showControls: false,
+                dashboard: dashboard,
+                interlacedDuration: 5000
+            });
+
+
+            const dashboard2 = new Dashboard('#dashboard-container2', {
+                 interlacedDuration: 3000 // Add effect (e.g., 3 seconds)
+            });
+
+            // Instance 4: No controls/log, starts on visibility
+            const sim4 = new CiCdSimulator('#simulator4', {
+                showLog: false,
+                showControls: false,
+                dashboard: dashboard2,
+                interlacedDuration: 5000
+            });
+
+            // Example: How you might update the dashboard later (e.g., after a build)
+            // setTimeout(() => {
+            //     dashboard.updateStats({
+            //         totalBuilds: 5,
+            //         successfulBuilds: 4,
+            //         failedBuilds: 1,
+            //         regressionsDetected: 1,
+            //         regressionsFixed: 0
+            //     });
+            // }, 5000); // Update after 5 seconds
+
+            // console.log("Components Initialized.");
+        });
+    </script>
+
+</body>
+</html>
