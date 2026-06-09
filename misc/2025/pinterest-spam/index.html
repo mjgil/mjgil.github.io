@@ -188,9 +188,7 @@
             pulseStartTime: 0,
             pulseDuration: 2000,
             shakeStartTime: 0,
-            shakeDuration: 500,
-            explosionStartTime: 0,
-            explosionDuration: 1500
+            shakeDuration: 500
           });
           stream.totalWidthOptimized += width + 20;
         }
@@ -198,20 +196,16 @@
       }
     }
 
-    createExplosion(stream, word, xPos) {
-      word.isExploding = true;
-      word.explosionStartTime = Date.now();
+    _createParticlesForWord(stream, word, xPos) {
       const charWidth = word.width / word.text.length;
       const chars = word.text.split('');
       const y = stream.y;
       for (let i = 0; i < chars.length; i++) {
         for (let px = 0; px < charWidth; px += 2) {
           for (let py = -12; py < 12; py += 2) {
-            const pixelX = xPos + i * charWidth + px;
-            const pixelY = y + py;
             stream.particles.push({
-              x: pixelX,
-              y: pixelY,
+              x: xPos + i * charWidth + px,
+              y: y + py,
               vx: (Math.random() - 0.5) * 10,
               vy: (Math.random() - 0.5) * 10,
               color: '#FF0000',
@@ -221,12 +215,18 @@
           }
         }
       }
+    }
+
+    createExplosion(stream, word, xPos) {
+      word.isExploding = true;
+      this._createParticlesForWord(stream, word, xPos);
       if (word.isSpam) {
         for (let j = 0; j < stream.wordsOptimized.length; j++) {
           const otherWord = stream.wordsOptimized[j];
           if (otherWord.isSpam && !otherWord.isExploding) {
             otherWord.isExploding = true;
-            otherWord.explosionStartTime = Date.now();
+            const otherXPos = otherWord.x + stream.position;
+            this._createParticlesForWord(stream, otherWord, otherXPos);
           }
         }
       }
@@ -275,12 +275,14 @@
           stream.position += firstSetWidth;
         }
 
+        // Ensure any spam word that somehow missed the chain reaction also explodes
         let hasExplodedSpam = stream.wordsOptimized.some(word => word.isSpam && word.isExploding);
         if (hasExplodedSpam) {
           stream.wordsOptimized.forEach(word => {
             if (word.isSpam && !word.isExploding) {
               word.isExploding = true;
-              word.explosionStartTime = currentTime;
+              const wordXPos = word.x + stream.position;
+              this._createParticlesForWord(stream, word, wordXPos);
             }
           });
         }
@@ -289,20 +291,20 @@
         for (let j = 0; j < stream.wordsOptimized.length; j++) {
           const word = stream.wordsOptimized[j];
           let xPos = word.x + stream.position;
-          if (xPos > -500 && xPos < (this.canvas.width / this.dpr) + 500) {
+          const isVisible = xPos > -500 && xPos < (this.canvas.width / this.dpr) + 500;
+          const needsAnimation = word.isPulsing || word.isShaking;
+          if (isVisible || needsAnimation) {
             this.effectManager.renderWord(word, stream.y, xPos, mouseIsOnCanvas, isAtSlowSpeed, currentTime, () => this.createExplosion(stream, word, xPos));
           }
         }
 
-        // Update and render particles using ParticleSystem with explicit life check
-        this.particleSystem.updateAndRender(stream.particles, () => {
+        // Update and render particles, filtering out dead ones
+        stream.particles = this.particleSystem.updateAndRender(stream.particles, () => {
           return stream.particles.filter(p => {
             p.x += p.vx;
             p.y += p.vy;
             p.vy += 0.2;
             p.life -= 0.01;
-            // Explicitly ensure life doesn't go negative unnecessarily
-            if (p.life < 0) p.life = 0;
             return p.life > 0;
           });
         });
