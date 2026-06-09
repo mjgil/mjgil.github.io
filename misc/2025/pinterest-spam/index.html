@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Stream Component Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background-color: #1a1a1a;
+      color: #ffffff;
+      font-family: 'Courier New', Courier, monospace;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-sizing: border-box;
+      gap: 40px;
+    }
+
+    .stream-container {
+      width: 100%;
+      max-width: 800px;
+      border-radius: 5px;
+      overflow: hidden;
+      background-color: #2a2a2a;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    canvas.event-stream {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 5px;
+    }
+
+    h2 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="stream-container">
+    <h2>Stream 1 (3 lines)</h2>
+    <canvas id="stream1" class="event-stream"></canvas>
+  </div>
+
+  <div class="stream-container">
+    <h2>Stream 2 (5 lines)</h2>
+    <canvas id="stream2" class="event-stream"></canvas>
+  </div>
+
+  <div class="stream-container">
+    <h2>Stream 3 (7 lines)</h2>
+    <canvas id="stream3" class="event-stream"></canvas>
+  </div>
+
+<script>
+  /**
+   * EventStream - A reusable component for rendering animated event streams on a canvas.
+   * Manages scrolling text streams with interactive effects on hover.
+   */
+  class EventStream {
+    /**
+     * Creates an instance of EventStream.
+     * @param {string} canvasId - The ID of the canvas element to render the stream on.
+     * @param {Object} [options={}] - Configuration options for the stream.
+     * @param {number} [options.numLines=3] - Number of text lines to display.
+     * @param {number} [options.lineHeight=35] - Height of each line in pixels.
+     * @param {number} [options.baseSpeed=200.0] - Base animation speed multiplier.
+     * @param {number} [options.hoverSpeed=1.0] - Speed multiplier when hovering.
+     */
+    constructor(canvasId, options = {}) {
+      // Set default options
+      this.options = {
+        numLines: 3,
+        lineHeight: 35,
+        baseSpeed: 200.0,
+        hoverSpeed: 1.0,
+        ...options
+      };
+
+      // Element references
+      this.canvas = document.getElementById(canvasId);
+      if (!this.canvas) {
+        throw new Error(`Canvas with id ${canvasId} not found`);
+      }
+
+      this.ctx = this.canvas.getContext('2d');
+      this.dpr = window.devicePixelRatio || 1;
+      
+      // State variables
+      this.streams = [];
+      this.speedMultiplier = this.options.baseSpeed;
+      this.targetSpeedMultiplier = this.options.baseSpeed;
+      this.transitionStartTime = 0;
+      this.inTransition = false;
+      this.isHovering = false;
+      this.transitionDuration = 500;
+      
+      // Event sets for each row
+      this.eventSets = [
+        ["PAGE_LOAD_COMPLETED", "USER_SESSION_STARTED", "CLICK_EVENT_TRACKED", "DATA_LOADED_SUCCESSFULLY", "NAVIGATION_TRIGGERED", "SPAM_REQUEST"],
+        ["USER_CLICK_DETECTED", "FORM_SUBMISSION_SENT", "VALIDATION_PASSED", "RESPONSE_RECEIVED", "PAGE_UPDATE_RENDERED", "SPAM_REQUEST"],
+        ["API_REQUEST_SENT", "SERVER_CONNECTION_ESTABLISHED", "DATA_PROCESSING", "RESPONSE_200_OK", "CACHE_UPDATED", "SPAM_REQUEST"],
+        ["DATA_FETCH_SUCCESS", "CONTENT_DISPLAYED", "USER_INTERACTION_LOGGED", "METRICS_SENT", "SESSION_UPDATED", "SPAM_REQUEST"],
+        ["ERROR_404_ENCOUNTERED", "RETRY_ATTEMPTED", "CONNECTION_FAILED", "ERROR_LOGGED", "USER_NOTIFIED", "SPAM_REQUEST"]
+      ];
+      
+      // Base row speeds (pixels per frame)
+      this.baseRowSpeeds = [0.5, 0.6, 0.4, 0.7, 0.55];
+      
+      // Initialize helper classes for modularity
+      this.effectManager = new EffectManager(this.ctx);
+      this.particleSystem = new ParticleSystem(this.ctx);
+      
+      // Initialize the component
+      this.init();
+    }
+
+    init() {
+      this.setCanvasSize();
+      this.initStreams();
+      this.setupEventListeners();
+      this.animate = this.animate.bind(this);
+      requestAnimationFrame(this.animate);
+    }
+
+    setCanvasSize() {
+      const canvasHeight = this.options.lineHeight * (this.options.numLines + 0.5);
+      this.canvas.height = canvasHeight * this.dpr;
+      this.canvas.width = this.canvas.getBoundingClientRect().width * this.dpr;
+      this.ctx.scale(this.dpr, this.dpr);
+      this.ctx.font = 'bold 24px "Courier New", monospace';
+    }
+
+    initStreams() {
+      this.streams = [];
+      const startY = this.options.lineHeight * 0.75;
+      for (let i = 0; i < this.options.numLines; i++) {
+        const eventSetIndex = i % this.eventSets.length;
+        const speedIndex = i % this.baseRowSpeeds.length;
+        const stream = {
+          y: Math.floor(startY + i * this.options.lineHeight),
+          baseSpeed: this.baseRowSpeeds[speedIndex],
+          wordsOptimized: [],
+          position: 0,
+          eventSet: this.eventSets[eventSetIndex],
+          totalWidthOptimized: 0,
+          particles: []
+        };
+        this.generateWordsOptimized(stream);
+        this.streams.push(stream);
+      }
+    }
+
+    generateWordsOptimized(stream) {
+      stream.wordsOptimized = [];
+      stream.totalWidthOptimized = 0;
+      const canvasWidth = this.canvas.width / this.dpr;
+      const bufferFactor = 2;
+      let setIndex = 0;
+      let setWidth = 0;
+      for (let i = 0; i < stream.eventSet.length; i++) {
+        const eventText = stream.eventSet[i];
+        const width = this.ctx.measureText(eventText).width;
+        setWidth += width + 20;
+      }
+      const requiredWidth = canvasWidth * bufferFactor;
+      const numSetsNeeded = Math.ceil(requiredWidth / setWidth) + 1;
+      for (let s = 0; s < numSetsNeeded; s++) {
+        for (let i = 0; i < stream.eventSet.length; i++) {
+          const eventText = stream.eventSet[i];
+          const width = this.ctx.measureText(eventText).width;
+          stream.wordsOptimized.push({
+            text: eventText,
+            width: width,
+            x: stream.totalWidthOptimized,
+            setIndex: setIndex,
+            isAlternate: i % 2 === 1,
+            isSpam: eventText === "SPAM_REQUEST",
+            isPulsing: false,
+            isShaking: false,
+            isExploding: false,
+            pulseStartTime: 0,
+            pulseDuration: 2000,
+            shakeStartTime: 0,
+            shakeDuration: 500,
+            explosionStartTime: 0,
+            explosionDuration: 1500
+          });
+          stream.totalWidthOptimized += width + 20;
+        }
+        setIndex++;
+      }
+    }
+
+    createExplosion(stream, word, xPos) {
+      word.isExploding = true;
+      word.explosionStartTime = Date.now();
+      const charWidth = word.width / word.text.length;
+      const chars = word.text.split('');
+      const y = stream.y;
+      for (let i = 0; i < chars.length; i++) {
+        for (let px = 0; px < charWidth; px += 2) {
+          for (let py = -12; py < 12; py += 2) {
+            const pixelX = xPos + i * charWidth + px;
+            const pixelY = y + py;
+            stream.particles.push({
+              x: pixelX,
+              y: pixelY,
+              vx: (Math.random() - 0.5) * 10,
+              vy: (Math.random() - 0.5) * 10,
+              color: '#FF0000',
+              size: 2,
+              life: 1.5
+            });
+          }
+        }
+      }
+      if (word.isSpam) {
+        for (let j = 0; j < stream.wordsOptimized.length; j++) {
+          const otherWord = stream.wordsOptimized[j];
+          if (otherWord.isSpam && !otherWord.isExploding) {
+            otherWord.isExploding = true;
+            otherWord.explosionStartTime = Date.now();
+          }
+        }
+      }
+    }
+
+    calculateSetWidth(stream) {
+      const setSize = stream.eventSet.length;
+      const firstSetWords = stream.wordsOptimized.slice(0, setSize);
+      let width = 0;
+      for (let i = 0; i < firstSetWords.length; i++) {
+        width += firstSetWords[i].width + 20;
+      }
+      return width;
+    }
+
+    animate() {
+      // Capture single timestamp per frame to avoid multiple Date.now() calls
+      const currentTime = Date.now();
+      this.ctx.clearRect(0, 0, this.canvas.width / this.dpr, this.canvas.height / this.dpr);
+      this.ctx.font = 'bold 24px "Courier New", monospace';
+      this.ctx.textBaseline = 'middle';
+
+      // Handle speed transitions
+      if (this.inTransition) {
+        const elapsedTime = currentTime - this.transitionStartTime;
+        const progress = Math.min(elapsedTime / this.transitionDuration, 1);
+        if (progress < 1) {
+          const t = 1 - (1 - progress) * (1 - progress);
+          this.speedMultiplier = this.options.baseSpeed + (this.targetSpeedMultiplier - this.options.baseSpeed) * t;
+        } else {
+          this.speedMultiplier = this.targetSpeedMultiplier;
+          this.inTransition = false;
+        }
+      }
+
+      const mouseIsOnCanvas = this.isHovering;
+      const isAtSlowSpeed = this.speedMultiplier <= 1.1;
+
+      for (let i = 0; i < this.streams.length; i++) {
+        const stream = this.streams[i];
+        const currentSpeed = stream.baseSpeed * this.speedMultiplier;
+        stream.position -= currentSpeed;
+
+        const firstSetWidth = this.calculateSetWidth(stream);
+        if (Math.abs(stream.position) >= firstSetWidth) {
+          stream.position += firstSetWidth;
+        }
+
+        let hasExplodedSpam = stream.wordsOptimized.some(word => word.isSpam && word.isExploding);
+        if (hasExplodedSpam) {
+          stream.wordsOptimized.forEach(word => {
+            if (word.isSpam && !word.isExploding) {
+              word.isExploding = true;
+              word.explosionStartTime = currentTime;
+            }
+          });
+        }
+
+        // Render words using EffectManager to reduce repetition
+        for (let j = 0; j < stream.wordsOptimized.length; j++) {
+          const word = stream.wordsOptimized[j];
+          let xPos = word.x + stream.position;
+          if (xPos > -500 && xPos < (this.canvas.width / this.dpr) + 500) {
+            this.effectManager.renderWord(word, stream.y, xPos, mouseIsOnCanvas, isAtSlowSpeed, currentTime, () => this.createExplosion(stream, word, xPos));
+          }
+        }
+
+        // Update and render particles using ParticleSystem with explicit life check
+        this.particleSystem.updateAndRender(stream.particles, () => {
+          return stream.particles.filter(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.2;
+            p.life -= 0.01;
+            // Explicitly ensure life doesn't go negative unnecessarily
+            if (p.life < 0) p.life = 0;
+            return p.life > 0;
+          });
+        });
+      }
+      requestAnimationFrame(this.animate);
+    }
+
+    setupEventListeners() {
+      // Improved resize handling to preserve animation state
+      window.addEventListener('resize', () => {
+        this.resize();
+      });
+
+      this.canvas.addEventListener('mouseenter', () => {
+        this.isHovering = true;
+        this.inTransition = true;
+        this.transitionStartTime = Date.now();
+        this.targetSpeedMultiplier = this.options.hoverSpeed;
+      });
+      
+      this.canvas.addEventListener('mouseleave', () => {
+        this.isHovering = false;
+        this.inTransition = true;
+        this.transitionStartTime = Date.now();
+        this.targetSpeedMultiplier = this.options.baseSpeed;
+      });
+    }
+
+    /**
+     * Resizes the canvas and adjusts streams without full reinitialization.
+     * Preserves animation state by scaling positions proportionally.
+     */
+    resize() {
+      const oldCanvasWidth = this.canvas.width / this.dpr;
+      this.setCanvasSize();
+      const newCanvasWidth = this.canvas.width / this.dpr;
+      const scaleFactor = newCanvasWidth / oldCanvasWidth;
+      // Adjust stream positions to avoid visual jumps
+      this.streams.forEach(stream => {
+        stream.position *= scaleFactor;
+        this.generateWordsOptimized(stream); // Regenerate words for new width
+      });
+    }
+
+    /**
+     * Updates the number of lines in the stream.
+     * @param {number} numLines - New number of lines to display.
+     */
+    setNumLines(numLines) {
+      this.options.numLines = numLines;
+      this.resize();
+    }
+  }
+
+  /**
+   * EffectManager - Manages text effects like pulsing, shaking, and exploding.
+   * Separated from EventStream for modularity.
+   */
+  class EffectManager {
+    /**
+     * @param {CanvasRenderingContext2D} ctx - Canvas context for rendering.
+     */
+    constructor(ctx) {
+      this.ctx = ctx;
+    }
+
+    /**
+     * Renders a word with appropriate effects based on its state.
+     * @param {Object} word - Word object with effect states and properties.
+     * @param {number} yPos - Y position to render the word.
+     * @param {number} xPos - X position to render the word.
+     * @param {boolean} isHovering - Whether the mouse is hovering over the canvas.
+     * @param {boolean} isSlowSpeed - Whether the animation is at slow speed.
+     * @param {number} currentTime - Current timestamp for timing effects.
+     * @param {Function} onExplode - Callback to trigger explosion effect.
+     */
+    renderWord(word, yPos, xPos, isHovering, isSlowSpeed, currentTime, onExplode) {
+      if (word.isSpam && isHovering && isSlowSpeed && !word.isPulsing && !word.isShaking && !word.isExploding) {
+        word.isPulsing = true;
+        word.pulseStartTime = currentTime;
+      }
+
+      if (word.isPulsing && !word.isShaking && !word.isExploding) {
+        const elapsedPulse = currentTime - word.pulseStartTime;
+        if (elapsedPulse < word.pulseDuration) {
+          const pulseProgress = Math.sin(elapsedPulse / 300) * 0.5 + 0.5;
+          const opacity = 0.3 + pulseProgress * 0.7;
+          this.ctx.save();
+          this.ctx.globalAlpha = opacity;
+          this.ctx.fillStyle = '#FF0000';
+          this.ctx.fillText(word.text, xPos, yPos);
+          this.ctx.restore();
+        } else {
+          word.isPulsing = false;
+          word.isShaking = true;
+          word.shakeStartTime = currentTime;
+        }
+      } else if (word.isShaking && !word.isExploding) {
+        const elapsedShake = currentTime - word.shakeStartTime;
+        if (elapsedShake < word.shakeDuration) {
+          const shakeOffsetX = (Math.random() - 0.5) * 4;
+          const shakeOffsetY = (Math.random() - 0.5) * 4;
+          this.ctx.save();
+          this.ctx.fillStyle = '#FF0000';
+          this.ctx.fillText(word.text, xPos + shakeOffsetX, yPos + shakeOffsetY);
+          this.ctx.restore();
+        } else {
+          word.isShaking = false;
+          onExplode();
+        }
+      } else if (word.isExploding) {
+        // Skip rendering during explosion
+      } else {
+        this.ctx.fillStyle = word.isAlternate ? '#cccc' : '#ffff';
+        this.ctx.fillText(word.text, xPos, yPos);
+      }
+    }
+  }
+
+  /**
+   * ParticleSystem - Manages particle effects for explosions.
+   * Separated for modularity and focused responsibility.
+   */
+  class ParticleSystem {
+    /**
+     * @param {CanvasRenderingContext2D} ctx - Canvas context for rendering particles.
+     */
+    constructor(ctx) {
+      this.ctx = ctx;
+    }
+
+    /**
+     * Updates and renders particles, filtering out expired ones.
+     * @param {Array<Object>} particles - Array of particle objects to update/render.
+     * @param {Function} updateCallback - Callback to update and filter particles.
+     */
+    updateAndRender(particles, updateCallback) {
+      // Use callback to update particles and get filtered list
+      const updatedParticles = updateCallback();
+      updatedParticles.forEach(p => {
+        this.ctx.fillStyle = p.color;
+        this.ctx.fillRect(p.x, p.y, p.size, p.size);
+      });
+      return updatedParticles;
+    }
+  }
+
+  // Initialize the components when the page loads
+  window.addEventListener('load', () => {
+    const stream1 = new EventStream('stream1', { numLines: 3 });
+    const stream2 = new EventStream('stream2', { numLines: 5 });
+    const stream3 = new EventStream('stream3', { numLines: 7 });
+  });
+</script>
+</body>
+</html>
