@@ -347,28 +347,17 @@ class WorkflowViewComponent {
     updateHighlights(currentState) {
         if (!currentState) return;
 
-        const stageNameMapping = {
-            COMMIT: 'Commit',
-            BUILD: 'Build',
-            TEST: 'Test',
-            DEPLOY: 'Deploy',
-            REGRESSION: this.regressionStageLayout.name
-        };
-
-        if (currentState === 'IDLE') {
+        if (currentState === 'GOING_TO_COMMIT' || currentState === 'IDLE') {
             this.highlightedStages.clear();
-        } else if (currentState.startsWith('GOING_TO_')) {
-            const goingStateType = currentState.substring('GOING_TO_'.length);
-            const targetStageName = stageNameMapping[goingStateType];
-            if (targetStageName) {
-                // GOING_TO_COMMIT starts a new cycle — reset highlights first
-                if (currentState === 'GOING_TO_COMMIT') {
-                    this.highlightedStages.clear();
-                }
-                this.highlightedStages.add(targetStageName);
-            }
         } else if (currentState.startsWith('PAUSED_ON_')) {
             const pausedStateType = currentState.substring('PAUSED_ON_'.length);
+            const stageNameMapping = {
+                COMMIT: 'Commit',
+                BUILD: 'Build',
+                TEST: 'Test',
+                DEPLOY: 'Deploy',
+                REGRESSION: this.regressionStageLayout.name
+            };
             const newlyPausedStageName = stageNameMapping[pausedStateType];
             if (newlyPausedStageName) {
                 this.highlightedStages.add(newlyPausedStageName);
