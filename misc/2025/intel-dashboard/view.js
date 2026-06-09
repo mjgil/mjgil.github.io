@@ -273,10 +273,13 @@ class WorkflowViewComponent {
                 this.ctx.fillStyle = this.activeBackgroundColor;
                 this.ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
 
-                // 4. Draw the scene content on top of the active background (still clipped)
+                // 4. Update highlights so stages are visible during the interlace reveal
+                this.updateHighlights(currentState);
+
+                // 5. Draw the scene content on top of the active background (still clipped)
                 this.drawSceneContent(currentModelData, movingNodeState, currentState);
 
-                // 5. Restore context (removes clipping)
+                // 6. Restore context (removes clipping)
                 this.ctx.restore();
                 return; // Drawn for this frame
             }
@@ -340,25 +343,36 @@ class WorkflowViewComponent {
         }
     }
 
-    // Helper function to update stage highlights (called only when not interlacing)
+    // Helper function to update stage highlights
     updateHighlights(currentState) {
-         if (currentState) {
-            if (currentState === 'GOING_TO_COMMIT' || currentState === 'IDLE') {
-                 this.highlightedStages.clear();
-            } else if (currentState.startsWith('PAUSED_ON_')) {
-                 const pausedStateType = currentState.substring('PAUSED_ON_'.length);
-                 const stageNameMapping = {
-                     COMMIT: 'Commit',
-                     BUILD: 'Build',
-                     TEST: 'Test',
-                     DEPLOY: 'Deploy',
-                     REGRESSION: this.regressionStageLayout.name
-                 };
-                 const newlyPausedStageName = stageNameMapping[pausedStateType];
-                 if (newlyPausedStageName) {
-                    this.highlightedStages.add(newlyPausedStageName);
-                 }
-             }
+        if (!currentState) return;
+
+        const stageNameMapping = {
+            COMMIT: 'Commit',
+            BUILD: 'Build',
+            TEST: 'Test',
+            DEPLOY: 'Deploy',
+            REGRESSION: this.regressionStageLayout.name
+        };
+
+        if (currentState === 'IDLE') {
+            this.highlightedStages.clear();
+        } else if (currentState.startsWith('GOING_TO_')) {
+            const goingStateType = currentState.substring('GOING_TO_'.length);
+            const targetStageName = stageNameMapping[goingStateType];
+            if (targetStageName) {
+                // GOING_TO_COMMIT starts a new cycle — reset highlights first
+                if (currentState === 'GOING_TO_COMMIT') {
+                    this.highlightedStages.clear();
+                }
+                this.highlightedStages.add(targetStageName);
+            }
+        } else if (currentState.startsWith('PAUSED_ON_')) {
+            const pausedStateType = currentState.substring('PAUSED_ON_'.length);
+            const newlyPausedStageName = stageNameMapping[pausedStateType];
+            if (newlyPausedStageName) {
+                this.highlightedStages.add(newlyPausedStageName);
+            }
         }
     }
 
