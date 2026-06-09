@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Screen WebGL Grid Animation</title>
+    <style>
+        html, body { height: 100%; margin: 0; padding: 0; background-color: #1a1a2e; overflow: hidden; }
+        canvas { display: block; width: 100%; height: 100%; }
+        #fps-display { position: fixed; top: 10px; left: 10px; background-color: rgba(0,0,0,0.7); color: #0f0; padding: 5px 10px; font-family: monospace; font-size: 14px; z-index: 1000; border-radius: 3px; user-select: none; }
+    </style>
+</head>
+<body>
+    <div id="fps-display">FPS: --</div>
+    <canvas id="webglCanvas"></canvas>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        precision mediump float; // Necessary for WebGL
+
+        attribute vec2 a_position;      // Vertex position of the base circle model (-1 to 1)
+        attribute vec2 a_offset;        // Per-instance offset (center position)
+        attribute float a_startTime;    // Per-instance animation start time
+
+        uniform float u_pointSize;      // Base size of the circle
+        uniform float u_time;           // Current global time
+        uniform vec2 u_resolution;      // Canvas resolution for projection
+        uniform float u_duration;       // Animation duration one way
+
+        varying vec4 v_color;           // Pass color to fragment shader
+
+        // Basic linear interpolation
+        float lerp(float a, float b, float t) {
+            return a + (b - a) * t;
+        }
+
+        // Simple rotation function (2D)
+        mat2 rotate2d(float angle){
+            return mat2(cos(angle), -sin(angle),
+                        sin(angle),  cos(angle));
+        }
+
+        void main() {
+            float elapsedSinceStart = u_time - a_startTime;
+
+            if (elapsedSinceStart < 0.0) {
+                gl_Position = vec4(0.0, 0.0, 0.0, 0.0); // Effectively hide/collapse
+                v_color = vec4(0.0); // Transparent
+                return;
+            }
+
+            float loopDuration = u_duration * 2.0;
+            float loopProgressTime = mod(elapsedSinceStart, loopDuration);
+            float progress = loopProgressTime / u_duration; // 0.0 to 2.0
+
+            if (progress > 1.0) {
+                progress = 2.0 - progress; // Map 1..2 back to 1..0 (alternating)
+            }
+
+            // --- Animation Calculations ---
+            // Scale (simplified: 0.1 to 1)
+            float scale = 0.0;
+            if (progress < 0.33) {
+                scale = lerp(1.0, 0.1, progress / 0.33);
+             } else {
+                scale = lerp(0.1, 1.0, (progress - 0.33) / 0.67);
+             }
+
+
+            // Rotation
+            float rotation = progress * 6.283185; // 2 * PI
+
+            // Color (interpolate between vec3 colors)
+            vec3 colorStart = vec3(233.0/255.0, 69.0/255.0, 96.0/255.0); // #e94560
+            vec3 colorEnd = vec3(15.0/255.0, 52.0/255.0, 96.0/255.0);     // #0f3460
+            vec3 color = mix(colorStart, colorEnd, progress);
+            v_color = vec4(color, 1.0); // Set varying color (alpha = 1)
+
+
+            // --- Transformations ---
+            // 1. Scale base position
+            vec2 pos = a_position * scale;
+            // 2. Rotate scaled position
+            pos = rotate2d(rotation) * pos;
+            // 3. Translate scaled+rotated position by offset
+            // Convert pixel offset to clip space (-1 to 1) relative to center
+            vec2 zeroToOne = (a_offset / u_resolution) * 2.0 - 1.0;
+            // Adjust for aspect ratio if needed, basic version assumes square pixels for simplicity
+            pos = pos * (u_pointSize / u_resolution); // Scale normalized vertex by point size relative to resolution
+            pos += zeroToOne;
+
+
+            gl_Position = vec4(pos.x, pos.y * -1.0, 0.0, 1.0); // Flip Y for WebGL coord system
+            // gl_PointSize = u_pointSize * scale; // Only needed if using gl.POINTS
+        }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec4 v_color;
+
+        void main() {
+            // Discard fragments outside a circle radius if not using vertex-based circle
+             float dist = distance(gl_PointCoord, vec2(0.5, 0.5));
+            // if (dist > 0.5) { // Uncomment if using gl.POINTS
+            //     discard;
+            // }
+            gl_FragColor = v_color; // Use interpolated color from vertex shader
+        }
+    </script>
+
+
+    <script>
+        const canvas = document.getElementById('webglCanvas');
+        // Try getting WebGL2, fallback to WebGL1
+        const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+        if (!gl) {
+            alert('WebGL not supported or disabled.');
+            throw new Error('WebGL not supported');
+        }
+
+        // Basic WebGL utils
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error('Shader compile error:', gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        function createProgram(gl, vsSource, fsSource) {
+            const vertexShader = createShader(gl, gl.VERTEX_SHADER, vsSource);
+            const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+            const program = gl.createProgram();
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.error('Program link error:', gl.getProgramInfoLog(program));
+                gl.deleteProgram(program);
+                return null;
+            }
+             // Detach and delete shaders after linking is good practice
+             gl.detachShader(program, vertexShader);
+             gl.detachShader(program, fragmentShader);
+             gl.deleteShader(vertexShader);
+             gl.deleteShader(fragmentShader);
+            return program;
+        }
+
+        const itemBaseSize = 20.0; // Use float for WebGL
+        const gap = 4.0;
+        const itemTotalSize = itemBaseSize + gap;
+        const staggerMs = 150.0;
+        const animationDuration = 1500.0; // Duration one way in ms
+
+        let gridCols, gridRows, totalItems, centerX, centerY;
+        let instanceOffsets = []; // Array for offset buffer data
+        let instanceStartTimes = []; // Array for start time buffer data
+        let numInstances = 0; // Track number of circles to draw
+        let animationFrameId = null;
+        let glProgram = null;
+        let positionBuffer = null; // Buffer for base circle vertices
+        let offsetBuffer = null;   // Buffer for instance offsets
+        let startTimeBuffer = null;// Buffer for instance start times
+        let vao = null; // Vertex Array Object (optional but good practice, esp. WebGL2)
+        let ext = null; // For WebGL1 instancing extension
+
+        // Attribute & Uniform locations
+        let positionAttribLoc, offsetAttribLoc, startTimeAttribLoc;
+        let timeUniformLoc, resolutionUniformLoc, pointSizeUniformLoc, durationUniformLoc;
+
+        // --- FPS Counter ---
+        const fpsDisplay = document.getElementById('fps-display');
+        const frameTimes = []; const fpsUpdateInterval = 500; let lastFpsUpdateTime = 0;
+        function measureFPS() {
+            const now = performance.now();
+            while (frameTimes.length > 0 && frameTimes[0] <= now - 1000) frameTimes.shift();
+            frameTimes.push(now);
+            if (now - lastFpsUpdateTime >= fpsUpdateInterval) {
+                fpsDisplay.textContent = `FPS: ${frameTimes.length}`; lastFpsUpdateTime = now;
+            } else if(lastFpsUpdateTime === 0) {
+                 fpsDisplay.textContent = `FPS: ${frameTimes.length}`; lastFpsUpdateTime = now;
+            }
+        }
+        // --- End FPS Counter ---
+
+        // --- Debounce ---
+        function debounce(func, wait) { /* ... same as above ... */
+             let timeout;
+             return function executedFunction(...args) {
+                 const later = () => { clearTimeout(timeout); func(...args); };
+                 clearTimeout(timeout); timeout = setTimeout(later, wait);
+             };
+        }
+        // --- End Debounce ---
+
+        function setupWebGLGrid() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+
+            // --- Calculate Dimensions ---
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            canvas.width = viewportWidth;
+            canvas.height = viewportHeight;
+            gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+
+            gridCols = Math.floor(viewportWidth / itemTotalSize);
+            gridRows = Math.floor(viewportHeight / itemTotalSize);
+            numInstances = gridCols * gridRows;
+
+            if (numInstances <= 0) return;
+
+            centerX = Math.floor(gridCols / 2);
+            centerY = Math.floor(gridRows / 2);
+
+            const gridWidth = gridCols * itemTotalSize - gap;
+            const gridHeight = gridRows * itemTotalSize - gap;
+            const offsetX = (viewportWidth - gridWidth) / 2; // Use top-left corner offset
+            const offsetY = (viewportHeight - gridHeight) / 2;
+
+
+            // --- Prepare Instance Data ---
+            instanceOffsets = new Float32Array(numInstances * 2); // x, y per instance
+            instanceStartTimes = new Float32Array(numInstances); // start time per instance
+            const initialTime = performance.now(); // Base time
+
+            for (let i = 0; i < numInstances; i++) {
+                const row = Math.floor(i / gridCols);
+                const col = i % gridCols;
+                const distance = Math.abs(col - centerX) + Math.abs(row - centerY);
+                const delay = distance * staggerMs;
+
+                // Calculate center position in pixels
+                const x = offsetX + col * itemTotalSize + itemBaseSize / 2.0;
+                const y = offsetY + row * itemTotalSize + itemBaseSize / 2.0;
+
+                instanceOffsets[i * 2] = x;
+                instanceOffsets[i * 2 + 1] = y;
+                instanceStartTimes[i] = initialTime + delay;
+            }
+
+             // --- Update Buffers ---
+             if (offsetBuffer) {
+                 gl.bindBuffer(gl.ARRAY_BUFFER, offsetBuffer);
+                 gl.bufferData(gl.ARRAY_BUFFER, instanceOffsets, gl.DYNAMIC_DRAW); // Update data
+             }
+              if (startTimeBuffer) {
+                 gl.bindBuffer(gl.ARRAY_BUFFER, startTimeBuffer);
+                 gl.bufferData(gl.ARRAY_BUFFER, instanceStartTimes, gl.DYNAMIC_DRAW); // Update data
+             }
+             gl.bindBuffer(gl.ARRAY_BUFFER, null); // Unbind
+
+
+            // --- Reset FPS and Start Animation ---
+            lastFpsUpdateTime = 0;
+            if (!animationFrameId) { // Prevent multiple loops if setup runs fast
+                 animateWebGL(initialTime);
+            }
+        }
+
+        function initWebGL() {
+            // --- Shaders & Program ---
+            const vsSource = document.getElementById('vertex-shader').text;
+            const fsSource = document.getElementById('fragment-shader').text;
+            glProgram = createProgram(gl, vsSource, fsSource);
+            if (!glProgram) return;
+            gl.useProgram(glProgram);
+
+            // --- Get Locations ---
+            positionAttribLoc = gl.getAttribLocation(glProgram, 'a_position');
+            offsetAttribLoc = gl.getAttribLocation(glProgram, 'a_offset');
+            startTimeAttribLoc = gl.getAttribLocation(glProgram, 'a_startTime');
+            timeUniformLoc = gl.getUniformLocation(glProgram, 'u_time');
+            resolutionUniformLoc = gl.getUniformLocation(glProgram, 'u_resolution');
+            pointSizeUniformLoc = gl.getUniformLocation(glProgram, 'u_pointSize');
+             durationUniformLoc = gl.getUniformLocation(glProgram, 'u_duration');
+
+
+            // --- Base Circle Geometry (e.g., a simple quad) ---
+             // Drawing circles with vertices is better but more complex.
+             // For simplicity here, we'll draw squares and rely on the fragment shader
+             // (or gl_PointSize if using gl.POINTS) to make them look circular.
+             // Using a simple quad (-0.5 to 0.5) allows easy scaling.
+             const positions = new Float32Array([
+                -0.5, -0.5,   0.5, -0.5,  -0.5,  0.5,
+                -0.5,  0.5,   0.5, -0.5,   0.5,  0.5,
+             ]);
+             positionBuffer = gl.createBuffer();
+             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+             gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+
+            // --- Instancing Buffers ---
+            offsetBuffer = gl.createBuffer();
+            // Data will be added in setupWebGLGrid
+
+            startTimeBuffer = gl.createBuffer();
+             // Data will be added in setupWebGLGrid
+
+
+             // --- VAO Setup (recommended) ---
+             // VAO encapsulates buffer binding and attribute configuration
+             if (gl instanceof WebGL2RenderingContext) {
+                 vao = gl.createVertexArray();
+                 gl.bindVertexArray(vao);
+
+                 // Configure base position attribute
+                 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+                 gl.enableVertexAttribArray(positionAttribLoc);
+                 gl.vertexAttribPointer(positionAttribLoc, 2, gl.FLOAT, false, 0, 0);
+
+                 // Configure instance offset attribute
+                 gl.bindBuffer(gl.ARRAY_BUFFER, offsetBuffer);
+                 gl.enableVertexAttribArray(offsetAttribLoc);
+                 gl.vertexAttribPointer(offsetAttribLoc, 2, gl.FLOAT, false, 0, 0);
+                 gl.vertexAttribDivisor(offsetAttribLoc, 1); // Advance 1 per instance
+
+                 // Configure instance start time attribute
+                 gl.bindBuffer(gl.ARRAY_BUFFER, startTimeBuffer);
+                 gl.enableVertexAttribArray(startTimeAttribLoc);
+                 gl.vertexAttribPointer(startTimeAttribLoc, 1, gl.FLOAT, false, 0, 0);
+                 gl.vertexAttribDivisor(startTimeAttribLoc, 1); // Advance 1 per instance
+
+                 gl.bindVertexArray(null); // Unbind VAO
+             } else {
+                 // WebGL1 requires enabling the extension
+                 ext = gl.getExtension('ANGLE_instanced_arrays');
+                 if (!ext) {
+                     alert('WebGL instancing not supported');
+                     return;
+                 }
+                 // Need to bind buffers and set vertexAttribPointer *every frame* or during setup without VAO
+                 // Setup attribute pointers here (can be done once if data doesn't change structure)
+                  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+                  gl.enableVertexAttribArray(positionAttribLoc);
+                  gl.vertexAttribPointer(positionAttribLoc, 2, gl.FLOAT, false, 0, 0);
+
+                  gl.bindBuffer(gl.ARRAY_BUFFER, offsetBuffer);
+                  gl.enableVertexAttribArray(offsetAttribLoc);
+                  gl.vertexAttribPointer(offsetAttribLoc, 2, gl.FLOAT, false, 0, 0);
+                  ext.vertexAttribDivisorANGLE(offsetAttribLoc, 1);
+
+                   gl.bindBuffer(gl.ARRAY_BUFFER, startTimeBuffer);
+                  gl.enableVertexAttribArray(startTimeAttribLoc);
+                  gl.vertexAttribPointer(startTimeAttribLoc, 1, gl.FLOAT, false, 0, 0);
+                   ext.vertexAttribDivisorANGLE(startTimeAttribLoc, 1);
+             }
+
+             // --- Initial Grid Setup ---
+             setupWebGLGrid();
+
+             // --- Resize Listener ---
+             window.addEventListener('resize', debounce(setupWebGLGrid, 250));
+        }
+
+
+        function animateWebGL(currentTime) {
+            gl.clearColor(26/255, 26/255, 46/255, 1.0); // Match background #1a1a2e
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            if (numInstances <= 0) { // Skip drawing if no instances
+                animationFrameId = requestAnimationFrame(animateWebGL);
+                return;
+            }
+
+            gl.useProgram(glProgram);
+
+            // Bind VAO if using WebGL2
+            if (vao) {
+                gl.bindVertexArray(vao);
+            }
+            // If using WebGL1 without VAO, buffer bindings & vertexAttribPointer calls
+            // might need to be repeated here if they change, but for this setup they don't.
+
+             // --- Set Uniforms ---
+             gl.uniform1f(timeUniformLoc, currentTime); // Pass current time
+             gl.uniform2f(resolutionUniformLoc, gl.drawingBufferWidth, gl.drawingBufferHeight);
+             gl.uniform1f(pointSizeUniformLoc, itemBaseSize);
+             gl.uniform1f(durationUniformLoc, animationDuration);
+
+
+            // --- Draw Instanced ---
+            const vertexCount = 6; // 6 vertices for a quad
+            if (gl instanceof WebGL2RenderingContext) {
+                 gl.drawArraysInstanced(gl.TRIANGLES, 0, vertexCount, numInstances);
+                 gl.bindVertexArray(null); // Unbind VAO
+            } else if (ext) {
+                 ext.drawArraysInstancedANGLE(gl.TRIANGLES, 0, vertexCount, numInstances);
+            }
+
+
+            measureFPS(); // Update FPS
+            animationFrameId = requestAnimationFrame(animateWebGL); // Loop
+        }
+
+        // --- Start Everything ---
+        initWebGL();
+
+    </script>
+</body>
+</html>

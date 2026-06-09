@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Screen Anime.js Grid with FPS</title>
+    <style>
+        /* Ensure html and body take full height and have no margins/padding */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a2e; /* Dark blue background */
+            overflow: hidden; /* Prevent scrollbars */
+        }
+
+        .grid-wrapper {
+            display: grid;
+             /* Columns/rows set by JS */
+            width: 100%; /* Use full viewport width */
+            height: 100%;/* Use full viewport height */
+            gap: 4px; /* Space between grid items */
+            perspective: 800px; /* Keep for 3D hover effect */
+            box-sizing: border-box;
+            /* Center grid content if grid size < viewport size */
+            justify-content: center;
+            align-content: center;
+        }
+
+        .grid-item {
+            background-color: #e94560; /* Initial bright color */
+            border-radius: 50%; /* Make them circles */
+             /* width/height handled by grid */
+             will-change: transform, background-color;
+             transform-origin: center center;
+        }
+
+        /* --- FPS Display Styling --- */
+        #fps-display {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #0f0; /* Green */
+            padding: 5px 10px;
+            font-family: monospace;
+            font-size: 14px;
+            z-index: 1000; /* Ensure it's on top */
+            border-radius: 3px;
+            user-select: none; /* Prevent text selection */
+        }
+    </style>
+</head>
+<body>
+    <div id="fps-display">FPS: --</div>
+
+    <div class="grid-wrapper">
+        </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+    <script>
+        const wrapper = document.querySelector('.grid-wrapper');
+        const itemBaseSize = 20; // Base size of the circle in pixels
+        const gap = 4;          // Gap between circles in pixels
+        const itemTotalSize = itemBaseSize + gap; // Total space one item occupies
+        const staggerMs = 150; // Delay per step for staggering
+
+        let gridAnimation = null; // To hold the main animation instance
+        let items = []; // To hold references to the grid items for hover
+
+        // Debounce function
+        function debounce(func, wait) {
+          let timeout;
+          return function executedFunction(...args) {
+            const later = () => {
+              clearTimeout(timeout);
+              func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+          };
+        }
+
+        function setupAnimeGrid() {
+            // 0. Clear previous grid and pause existing animation
+            wrapper.innerHTML = '';
+            if (gridAnimation) {
+                anime.remove('.grid-item');
+                gridAnimation.pause();
+            }
+            items = [];
+
+            // 1. Calculate dynamic grid dimensions
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const gridCols = Math.floor(viewportWidth / itemTotalSize);
+            const gridRows = Math.floor(viewportHeight / itemTotalSize);
+            const totalItems = gridCols * gridRows;
+
+             if (totalItems <= 0) {
+                 console.warn("Screen too small to display grid items.");
+                 return;
+             }
+
+            // 2. Update wrapper styles
+            wrapper.style.gridTemplateColumns = `repeat(${gridCols}, ${itemBaseSize}px)`;
+            wrapper.style.gridTemplateRows = `repeat(${gridRows}, ${itemBaseSize}px)`;
+
+            // 3. Dynamically create grid items
+            for (let i = 0; i < totalItems; i++) {
+                const item = document.createElement('div');
+                item.classList.add('grid-item');
+                wrapper.appendChild(item);
+            }
+
+            // 4. The main staggered animation (re-initialize)
+             gridAnimation = anime({
+                 targets: '.grid-item',
+                 scale: [
+                     { value: 0.1, easing: 'easeOutSine', duration: 500 },
+                     { value: 1, easing: 'easeInOutQuad', duration: 1000 }
+                 ],
+                 backgroundColor: ['#e94560', '#0f3460'],
+                 rotate: '1turn',
+                 delay: anime.stagger(staggerMs, {
+                     grid: [gridCols, gridRows],
+                     from: 'center'
+                 }),
+                 loop: true,
+                 direction: 'alternate',
+                 easing: 'easeInOutSine'
+             });
+
+            // 5. Interaction on Hover (re-attach listeners)
+            items = wrapper.querySelectorAll('.grid-item');
+            items.forEach(item => {
+                item.addEventListener('mouseenter', () => {
+                    anime.remove(item);
+                    anime({
+                        targets: item, scale: 1.5, backgroundColor: '#f8c537', translateZ: 20,
+                        duration: 300, easing: 'easeOutExpo'
+                    });
+                });
+                item.addEventListener('mouseleave', () => {
+                    anime.remove(item);
+                    anime({
+                        targets: item, scale: 1, backgroundColor: '#0f3460', translateZ: 0,
+                        duration: 500, easing: 'easeOutExpo'
+                    });
+                });
+            });
+             // console.log(`Anime.js Grid updated: ${gridCols}x${gridRows}`); // Optional logging
+        }
+
+        // --- FPS Counter Logic ---
+        const fpsDisplay = document.getElementById('fps-display');
+        const frameTimes = []; // Stores timestamps of frames within the last second
+        const fpsUpdateInterval = 500; // Update display text every 500ms
+        let lastFpsUpdateTime = 0;
+
+        function measureFPS() {
+            const now = performance.now();
+
+            // Remove frames older than 1 second (1000ms)
+            while (frameTimes.length > 0 && frameTimes[0] <= now - 1000) {
+                frameTimes.shift();
+            }
+
+            // Add current frame timestamp
+            frameTimes.push(now);
+
+            // Update the display periodically for stability
+            if (now - lastFpsUpdateTime >= fpsUpdateInterval) {
+                const currentFPS = frameTimes.length; // Count frames rendered in the last second
+                fpsDisplay.textContent = `FPS: ${currentFPS}`;
+                lastFpsUpdateTime = now;
+            } else if (lastFpsUpdateTime === 0) { // Update immediately on the very first frame
+                 fpsDisplay.textContent = `FPS: ${frameTimes.length}`;
+                 lastFpsUpdateTime = now;
+            }
+
+            // Request the next frame
+            requestAnimationFrame(measureFPS);
+        }
+        // --- End FPS Counter Logic ---
+
+
+        // Initial setup for the grid
+        setupAnimeGrid();
+
+        // Setup grid again on window resize (debounced)
+        window.addEventListener('resize', debounce(setupAnimeGrid, 250));
+
+        // Start the FPS counter loop
+        requestAnimationFrame(measureFPS);
+
+    </script>
+
+</body>
+</html>

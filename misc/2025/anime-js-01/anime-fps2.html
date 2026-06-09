@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Screen Canvas 2D Grid Animation</title>
+    <style>
+        html, body {
+            height: 100%; margin: 0; padding: 0; background-color: #1a1a2e; overflow: hidden;
+        }
+        canvas {
+            display: block; /* Remove potential space below canvas */
+            width: 100%;  /* Use CSS to scale visually */
+            height: 100%;
+        }
+        #fps-display {
+            position: fixed; top: 10px; left: 10px; background-color: rgba(0,0,0,0.7);
+            color: #0f0; padding: 5px 10px; font-family: monospace; font-size: 14px;
+            z-index: 1000; border-radius: 3px; user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="fps-display">FPS: --</div>
+    <canvas id="canvas2d"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas2d');
+        const ctx = canvas.getContext('2d');
+
+        const itemBaseSize = 20;
+        const gap = 4;
+        const itemTotalSize = itemBaseSize + gap;
+        const staggerMs = 150;
+        const animationDuration = 1500; // Duration for one direction
+
+        const colorStart = { r: 233, g: 69, b: 96 }; // #e94560
+        const colorEnd = { r: 15, g: 52, b: 96 };   // #0f3460
+
+        let gridCols, gridRows, totalItems, centerX, centerY;
+        let circles = [];
+        let animationFrameId = null; // To cancel animation frame on resize
+
+        // --- FPS Counter ---
+        const fpsDisplay = document.getElementById('fps-display');
+        const frameTimes = [];
+        const fpsUpdateInterval = 500;
+        let lastFpsUpdateTime = 0;
+
+        function measureFPS() {
+            const now = performance.now();
+            while (frameTimes.length > 0 && frameTimes[0] <= now - 1000) frameTimes.shift();
+            frameTimes.push(now);
+            if (now - lastFpsUpdateTime >= fpsUpdateInterval) {
+                fpsDisplay.textContent = `FPS: ${frameTimes.length}`;
+                lastFpsUpdateTime = now;
+            } else if(lastFpsUpdateTime === 0) {
+                 fpsDisplay.textContent = `FPS: ${frameTimes.length}`;
+                 lastFpsUpdateTime = now;
+            }
+            // Continue outside the animation loop if needed, but tie it here for simplicity
+            // requestAnimationFrame(measureFPS); // If running independently
+        }
+        // --- End FPS Counter ---
+
+        // --- Debounce ---
+        function debounce(func, wait) {
+          let timeout;
+          return function executedFunction(...args) {
+            const later = () => { clearTimeout(timeout); func(...args); };
+            clearTimeout(timeout); timeout = setTimeout(later, wait);
+          };
+        }
+        // --- End Debounce ---
+
+        // --- Color Interpolation ---
+        function lerp(a, b, t) {
+            return a + (b - a) * t;
+        }
+        function interpolateColor(colorA, colorB, t) {
+            const r = Math.round(lerp(colorA.r, colorB.r, t));
+            const g = Math.round(lerp(colorA.g, colorB.g, t));
+            const b = Math.round(lerp(colorA.b, colorB.b, t));
+            return `rgb(${r},${g},${b})`;
+        }
+        // --- End Color Interpolation ---
+
+        function setupCanvasGrid() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId); // Stop previous loop
+            }
+            circles = []; // Clear circles data
+
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            // Set actual canvas drawing size
+            canvas.width = viewportWidth;
+            canvas.height = viewportHeight;
+
+            gridCols = Math.floor(viewportWidth / itemTotalSize);
+            gridRows = Math.floor(viewportHeight / itemTotalSize);
+            totalItems = gridCols * gridRows;
+
+            if (totalItems <= 0) return;
+
+            centerX = Math.floor(gridCols / 2);
+            centerY = Math.floor(gridRows / 2);
+
+            // Calculate grid starting offset for centering
+            const gridWidth = gridCols * itemTotalSize - gap;
+            const gridHeight = gridRows * itemTotalSize - gap;
+            const offsetX = (viewportWidth - gridWidth) / 2 + itemBaseSize / 2;
+            const offsetY = (viewportHeight - gridHeight) / 2 + itemBaseSize / 2;
+
+
+            const initialTime = performance.now();
+
+            for (let i = 0; i < totalItems; i++) {
+                const row = Math.floor(i / gridCols);
+                const col = i % gridCols;
+                const distance = Math.abs(col - centerX) + Math.abs(row - centerY);
+                const delay = distance * staggerMs;
+
+                circles.push({
+                    x: offsetX + col * itemTotalSize,
+                    y: offsetY + row * itemTotalSize,
+                    delay: delay,
+                    startTime: initialTime + delay // Absolute start time
+                });
+            }
+             lastFpsUpdateTime = 0; // Reset FPS timer on setup
+             animateCanvas(initialTime); // Start animation loop
+        }
+
+        function animateCanvas(currentTime) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+
+            const loopDuration = animationDuration * 2; // Full cycle forth and back
+
+            circles.forEach(circle => {
+                const elapsedSinceStart = currentTime - circle.startTime;
+
+                if (elapsedSinceStart < 0) return; // Delay not yet passed
+
+                // Calculate progress within the full loop (0 to loopDuration)
+                const loopProgressTime = elapsedSinceStart % loopDuration;
+                let direction = 1; // 1 = forward, -1 = backward
+                let progress = loopProgressTime / animationDuration; // 0 to 2
+
+                if (progress > 1) { // If we are in the return phase
+                    progress = 2 - progress; // Map 1..2 back to 1..0
+                    direction = -1;
+                }
+
+                // --- Apply Animation ---
+                // Simplified scale: 0.1 to 1 based on progress
+                // More complex scale: (Needs adjustment for two-step)
+                let scale;
+                 if (progress < 0.33) {
+                    scale = lerp(1.0, 0.1, progress / 0.33);
+                 } else {
+                    scale = lerp(0.1, 1.0, (progress - 0.33) / 0.67);
+                 }
+
+
+                // Rotation: 0 to 1 turn (2 * PI radians)
+                const rotation = progress * Math.PI * 2;
+
+                // Color interpolation
+                const color = interpolateColor(colorStart, colorEnd, progress);
+                ctx.fillStyle = color;
+
+                // --- Draw Circle ---
+                ctx.save(); // Save current state (transform, fillStyle)
+                ctx.translate(circle.x, circle.y); // Move origin to circle center
+                ctx.rotate(rotation);
+                ctx.scale(scale, scale);
+
+                ctx.beginPath();
+                // Draw arc centered at the *translated* origin (0,0)
+                ctx.arc(0, 0, itemBaseSize / 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore(); // Restore state
+            });
+
+             measureFPS(); // Update FPS counter
+             animationFrameId = requestAnimationFrame(animateCanvas); // Continue loop
+        }
+
+        // Initial setup & resize handling
+        setupCanvasGrid();
+        window.addEventListener('resize', debounce(setupCanvasGrid, 250));
+
+    </script>
+</body>
+</html>
