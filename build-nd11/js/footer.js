@@ -1,1 +1,0 @@
-document.write("<footer id=\"footerMain\"> Nu Delta Fraternity Website  Copyright &copy; 2011</footer>");
