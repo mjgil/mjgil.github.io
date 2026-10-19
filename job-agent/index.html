@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MalcomJobAssistant — MJGIL, Inc</title>
+  <meta name="description" content="Operator, purpose, User-Agent, and fixed IP address for MJGIL, Inc's MalcomJobAssistant public job discovery agent.">
+  <style>
+    :root { color-scheme: light dark; }
+    body { max-width: 48rem; margin: 3rem auto; padding: 0 1.25rem; font: 1rem/1.6 system-ui, sans-serif; }
+    h1 { line-height: 1.2; }
+    dt { font-weight: 650; margin-top: 1rem; }
+    dd { margin-left: 0; overflow-wrap: anywhere; }
+    code { font-size: .95em; }
+    footer { margin-top: 3rem; border-top: 1px solid #888; padding-top: 1rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <p><a href="/">MJGIL, Inc</a> / Agent documentation</p>
+    <h1>MalcomJobAssistant</h1>
+    <p>MalcomJobAssistant is a user-directed job discovery agent operated by MJGIL, Inc.
+      It collects public New York City employment postings for the operator to review.</p>
+
+    <h2>Operator and identity</h2>
+    <dl>
+      <dt>Operator</dt><dd>MJGIL, Inc</dd>
+      <dt>Contact</dt><dd><a href="mailto:malcom@mjgil.com">malcom@mjgil.com</a></dd>
+      <dt>Website</dt><dd><a href="https://mjgil.com/">https://mjgil.com/</a></dd>
+      <dt>Dedicated HTTP User-Agent</dt><dd><code>MalcomJobAssistant/1.0</code></dd>
+      <dt>Outgoing IPv4 address</dt><dd><code>64.181.213.36</code></dd>
+      <dt>IPv4 range</dt><dd><code>64.181.213.36/32</code></dd>
+      <dt>Machine-readable IP list</dt><dd><a href="ips.json">ips.json</a></dd>
+    </dl>
+
+    <h2>Purpose and current behavior</h2>
+    <p>The agent reads the public SmartRecruiters Posting API for the CityOfNewYork
+      company. It currently selects external Department of Transportation and
+      Department of Sanitation postings and records job descriptions, qualifications,
+      compensation, deadlines, and official application links in a private review dashboard.</p>
+    <p>Discovery runs every six hours from an Oracle Cloud server at the fixed IPv4
+      address above. Requests use the dedicated User-Agent. The connector follows
+      bounded pagination and stops on unsuccessful responses, including HTTP 403 and 429.</p>
+
+    <h2>Applications and access policy</h2>
+    <p>Public discovery does not submit job applications or create application approvals.
+      Protected SmartRecruiters application forms are handled separately through manual
+      browser interaction. The public discovery connector does not solve challenges,
+      rotate identities, or call private candidate endpoints.</p>
+    <p>This page documents the deployed agent identity. It does not claim DataDome
+      verification or authorization from any destination website. Any future protected
+      automation remains subject to verification and the destination's access policy.</p>
+
+    <h2>Data handling and contact</h2>
+    <p>The public discovery connector collects public job-posting information.
+      Applicant information, credentials, private application records, and API tokens
+      are not published in this documentation or IP list.</p>
+    <p>Site operators can contact <a href="mailto:malcom@mjgil.com">malcom@mjgil.com</a>
+      about the agent, its traffic, or an access-policy request.</p>
+  </main>
+  <footer>MJGIL, Inc · Agent documentation updated October 18, 2026</footer>
+</body>
+</html>

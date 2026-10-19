@@ -1,0 +1,10 @@
+{
+  "agent": "MalcomJobAssistant",
+  "operator": "MJGIL, Inc",
+  "contact": "malcom@mjgil.com",
+  "user_agent": "MalcomJobAssistant/1.0",
+  "documentation_url": "https://mjgil.com/job-agent/",
+  "prefixes": [
+    { "ipv4Prefix": "64.181.213.36/32" }
+  ]
+}
