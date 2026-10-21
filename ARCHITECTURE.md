@@ -12,6 +12,7 @@
 
 - `wasm/index.html` is the landing page for browser-based Rust and WebAssembly projects.
 - The homepage links to that hub at `https://mjgil.com/wasm`.
+- `wasm/html-to-markdown/` contains the static release bundle for the Rust HTML-to-Markdown converter. Source and build/staging scripts live separately in `mjgil/html-to-markdown` (`~/git/html-to-markdown`); the page runs entirely in the browser.
 
 ## Job Agent Documentation
 
