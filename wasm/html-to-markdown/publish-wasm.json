@@ -1,0 +1,7 @@
+{
+  "app": "html-to-markdown",
+  "builder": "wasm-pack",
+  "bundleHash": "192169e7567419dba6af",
+  "sourceCommit": "61165337c2ceb4a4cf30d93674818a52aa51980f",
+  "sourceDirty": false
+}

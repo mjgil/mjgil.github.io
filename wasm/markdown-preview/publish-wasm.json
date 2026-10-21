@@ -1,0 +1,7 @@
+{
+  "app": "markdown-preview",
+  "builder": "wasm-pack",
+  "bundleHash": "e77ff35a1e10ed542fbf",
+  "sourceCommit": "2bd1b0d91b57e91d1e0ac95d749bca1827679dd3",
+  "sourceDirty": true
+}
