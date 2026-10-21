@@ -1,0 +1,7 @@
+{
+  "app": "pdf-toolkit",
+  "builder": "vite",
+  "bundleHash": "664c0a90afa60de80560",
+  "sourceCommit": "05447694e1b7caf8a3fb2b46ac18a60e84185eec",
+  "sourceDirty": false
+}

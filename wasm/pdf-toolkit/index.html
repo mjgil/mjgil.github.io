@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6f7f3" />
+    <meta
+      name="description"
+      content="Merge, reorder, rotate, and extract PDF pages privately in your browser. No uploads or accounts."
+    />
+    <title>PDF Toolkit · Every page in its place</title>
+    <script type="module" crossorigin src="./assets/index-CPT8MCft.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/preload-helper-CRzLMJPS.js">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="./"
+        ><span class="brand-icon" aria-hidden="true">▤</span> PDF Toolkit</a
+      ><a class="back-link" href="../"
+        >All tools <span aria-hidden="true">↗</span></a
+      >
+    </header>
+    <main>
+      <section class="intro">
+        <div>
+          <p class="eyebrow">A LITTLE ORDER GOES A LONG WAY</p>
+          <h1>Every page.<br /><span>In its place.</span></h1>
+          <p class="lede">
+            Bring your PDFs together. Arrange the pages,<br class="desktop" />
+            make a few edits, and leave with one good document.
+          </p>
+        </div>
+        <div class="privacy">
+          <span class="privacy-icon" aria-hidden="true">⌑</span>
+          <div>
+            <strong>Your files stay yours.</strong>
+            <p>
+              Everything happens in your browser.<br />No uploads. No accounts.
+              No server.
+            </p>
+          </div>
+        </div>
+      </section>
+      <div class="workspace">
+        <section class="editor" aria-label="PDF page workspace">
+          <div id="dropzone" class="dropzone">
+            <div class="upload-icon" aria-hidden="true">↑</div>
+            <div>
+              <h2>Drop your PDFs here</h2>
+              <p>One file or a whole stack. We’ll bring the pages together.</p>
+              <span class="file-limits"
+                >PDF only · 75 MB per file · 150 MB / 500 pages total</span
+              >
+            </div>
+            <button id="choose" class="button primary" disabled>
+              Choose PDFs <span aria-hidden="true">＋</span></button
+            ><input
+              id="files"
+              type="file"
+              accept="application/pdf,.pdf"
+              multiple
+              hidden
+            />
+          </div>
+          <div class="status-row">
+            <span class="status-dot" aria-hidden="true"></span>
+            <p id="status" role="status" aria-live="polite">
+              Starting PDF engine…
+            </p>
+            <button id="retry" class="text-button" hidden>Reload tool</button>
+          </div>
+          <div id="errors" class="error" role="alert" hidden></div>
+          <div
+            id="source-list"
+            class="source-list"
+            aria-label="Loaded PDF files"
+          ></div>
+          <div class="workspace-heading">
+            <div>
+              <h2>
+                Your page sequence <span id="page-count" class="count">0</span>
+              </h2>
+              <p>Drag to reorder. The numbers show your final document.</p>
+            </div>
+            <div class="history-controls">
+              <button
+                id="undo"
+                class="icon-button"
+                aria-label="Undo"
+                title="Undo (Ctrl or ⌘ Z)"
+                disabled
+              >
+                ↶</button
+              ><button
+                id="redo"
+                class="icon-button"
+                aria-label="Redo"
+                title="Redo (Ctrl or ⌘ Shift Z)"
+                disabled
+              >
+                ↷
+              </button>
+            </div>
+          </div>
+          <div id="toolbar" class="toolbar">
+            <label class="select-all"
+              ><input id="select-all" type="checkbox" disabled />
+              <span id="selection-count">Select all</span></label
+            >
+            <div class="bulk-actions">
+              <button id="rotate-selected" class="text-button" disabled>
+                ↻ Rotate</button
+              ><button
+                id="remove-selected"
+                class="text-button danger-text"
+                disabled
+              >
+                Remove</button
+              ><button id="clear-selection" class="text-button" disabled>
+                Clear selection
+              </button>
+            </div>
+          </div>
+          <div
+            id="grid"
+            class="page-grid"
+            aria-label="Pages in output order"
+          ></div>
+          <div id="empty" class="empty">
+            <div class="paper-stack" aria-hidden="true">
+              <span></span><span></span><span><i></i><i></i><i></i></span>
+            </div>
+            <h3>A fresh start for your paperwork.</h3>
+            <p>
+              Add a PDF above to see its pages here.<br />You can add more files
+              as you go.
+            </p>
+          </div>
+          <p class="editor-hint">
+            <span aria-hidden="true">↔</span> Use each page’s arrow buttons to
+            reorder with a keyboard or on your phone.
+          </p>
+        </section>
+        <aside class="sidebar">
+          <section class="export-panel">
+            <p class="eyebrow">THE FINISHED DOCUMENT</p>
+            <h2>Ready when you are.</h2>
+            <div class="export-stats">
+              <div><strong id="export-pages">0</strong><span>pages</span></div>
+              <div>
+                <strong id="export-sources">0</strong><span>source files</span>
+              </div>
+            </div>
+            <label class="field-label" for="filename">Output filename</label>
+            <div class="filename-field">
+              <input
+                id="filename"
+                value="assembled-document"
+                maxlength="120"
+                autocomplete="off"
+                spellcheck="false"
+              /><span>.pdf</span>
+            </div>
+            <p id="filename-preview" class="filename-preview">
+              assembled-document.pdf
+            </p>
+            <button id="download" class="button primary wide" disabled>
+              Review & download <span aria-hidden="true">↓</span></button
+            ><button id="extract" class="button secondary wide" disabled>
+              Extract selected pages <span aria-hidden="true">↗</span>
+            </button>
+            <p class="extract-help">
+              Select pages to make a separate PDF.<br />Your workspace stays in
+              place.
+            </p>
+            <div class="local-note">
+              <span aria-hidden="true">●</span> Assembled locally with Rust +
+              WebAssembly
+            </div>
+          </section>
+          <section class="history-panel">
+            <div class="panel-heading">
+              <h2>Edit history</h2>
+              <span class="small-label">50 steps</span>
+            </div>
+            <ol id="history-list">
+              <li class="history-empty">Your changes will appear here.</li>
+            </ol>
+          </section>
+          <section class="about-panel">
+            <h3>Just the pages you need.</h3>
+            <p>
+              Page content, sizes, rotation, and ordinary annotations are kept.
+              Document bookmarks, attachments, and digital signatures aren’t
+              carried over. Flatten interactive forms before adding them.
+            </p>
+            <p>
+              Files are kept in this tab only. Download your work before closing
+              or reloading.
+            </p>
+            <button id="reset" class="text-button" disabled>Start over</button>
+          </section>
+        </aside>
+      </div>
+      <footer>
+        <span>Small tools. Useful things.</span
+        ><span>Made for the task at hand.</span>
+      </footer>
+    </main>
+    <dialog id="export-dialog">
+      <div class="dialog-top">
+        <p class="eyebrow">ONE LAST LOOK</p>
+        <button
+          id="close-dialog"
+          class="icon-button"
+          aria-label="Close export preview"
+        >
+          ×
+        </button>
+      </div>
+      <h2 id="review-title">Your document, in order.</h2>
+      <p id="review-summary"></p>
+      <label class="field-label" for="review-filename">Download filename</label
+      ><input
+        id="review-filename"
+        class="review-filename"
+        maxlength="130"
+        spellcheck="false"
+      />
+      <ol id="review-sequence" class="review-sequence"></ol>
+      <p id="export-error" class="error" role="alert" hidden></p>
+      <button id="confirm-export" class="button primary wide">
+        Download PDF ↓
+      </button>
+    </dialog>
+  </body>
+</html>
